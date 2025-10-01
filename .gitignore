@@ -1,1 +1,5 @@
+# Packages
 node_modules/
+
+# Misc.
+.env
