@@ -31,5 +31,4 @@ const closeDB = async () => {
     }
 };
 
-module.exports = connectDB;
-module.exports = closeDB;
+module.exports = { connectDB, closeDB }
