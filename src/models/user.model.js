@@ -49,7 +49,7 @@ const userSchema = new Schema({
     skillLevel: {
       type: String,
       enum: ['Beginner', 'Intermediate', 'Advanced', 'Expert'],
-      default: 'Intermediate',
+      default: 'Beginner',
     },
     bio: {
       type: String,

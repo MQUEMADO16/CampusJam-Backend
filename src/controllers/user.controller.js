@@ -1,13 +1,27 @@
 const User = require('../models/user.model');
 
 // TODO: implement endpoint logic here
+
+/**
+ * @desc  Fetch all users
+ * @route GET /api/users
+ */
 exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find().select('-password -__v');
+    res.status(200).json(users);
+  }
+  catch (error) {
+    console.error('Error fetching users: ', error);
+    res.status(500).json({
+      message: 'Server error while fetching users.',
+    });
+  }
 };
 
 /**
- * @desc    Create a new user (Simplified for initial testing)
- * @route   POST /api/users
- * @access  Public
+ * @desc  Create a new user (Simplified for initial testing)
+ * @route POST /api/users
  */
 exports.createUser = async (req, res) => {
   try {
