@@ -33,7 +33,6 @@ const userSchema = new Schema({
   campus: {
     type: String,
     trim: true,
-    // Represents the user's primary campus affiliation.
   },
 
   // Musician Profile

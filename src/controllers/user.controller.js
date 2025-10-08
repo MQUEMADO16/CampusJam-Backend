@@ -40,9 +40,8 @@ exports.createUser = async (req, res) => {
       message: 'SUCCESS: User was created and saved to the database.',
       user: newUser,
     });
-
-  } catch (error) {
-    
+  }
+  catch (error) {
     console.error('DATABASE CONNECTION ERROR:', error);
     res.status(500).json({
       message: 'FAIL: An error occurred while trying to save the user.',
