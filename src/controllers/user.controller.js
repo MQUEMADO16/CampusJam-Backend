@@ -1,6 +1,6 @@
 const User = require('../models/user.model');
 
-// TODO: implement endpoint logic here
+// TODO: implement all endpoint logic 
 
 /**
  * @desc  Fetch all users
@@ -19,6 +19,7 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
+// TODO: add password hashing
 /**
  * @desc  Create a new user (Simplified for initial testing)
  * @route POST /api/users
