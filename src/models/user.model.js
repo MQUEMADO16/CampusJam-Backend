@@ -33,7 +33,6 @@ const userSchema = new Schema({
   campus: {
     type: String,
     trim: true,
-    // Represents the user's primary campus affiliation.
   },
 
   // Musician Profile
@@ -49,7 +48,7 @@ const userSchema = new Schema({
     skillLevel: {
       type: String,
       enum: ['Beginner', 'Intermediate', 'Advanced', 'Expert'],
-      default: 'Intermediate',
+      default: 'Beginner',
     },
     bio: {
       type: String,
