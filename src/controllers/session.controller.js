@@ -148,7 +148,7 @@ exports.markComplete = async (req, res) => {
 
 /**
  * @desc   Get all active sessions (status = 'Ongoing')
- * @route  GET /api/sessions
+ * @route  GET /api/sessions/active
  */
 exports.getActiveSessions = async (req, res) => {
   try {
