@@ -1,4 +1,4 @@
-const JamSession = require('../models/session.model');
+const Session = require('../models/session.model');
 
 // implement endpoint logic here
 
@@ -16,7 +16,7 @@ exports.getVisibility = async (req, res) => {
       });
     }
 
-    const session = await JamSession.findById(id).select('isPublic');
+    const session = await Session.findById(id).select('isPublic');
 
     if (!session) {
       return res.status(404).json({
@@ -50,7 +50,7 @@ exports.setVisibility = async (req, res) => {
       });
     }
 
-    const session = await JamSession.findByIdAndUpdate(
+    const session = await Session.findByIdAndUpdate(
       sessionId,
       { isPublic },
       { new: true }
@@ -89,7 +89,7 @@ exports.updateVisibility = async (req, res) => {
       });
     }
 
-    const session = await JamSession.findByIdAndUpdate(
+    const session = await Session.findByIdAndUpdate(
       sessionId,
       { isPublic },
       { new: true }
@@ -121,7 +121,7 @@ exports.markComplete = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const session = await JamSession.findByIdAndUpdate(
+    const session = await Session.findByIdAndUpdate(
       id,
       { status: 'Finished', endTime: new Date() },
       { new: true }
@@ -152,7 +152,7 @@ exports.markComplete = async (req, res) => {
  */
 exports.getActiveSessions = async (req, res) => {
   try {
-    const sessions = await JamSession.find({ status: 'Ongoing' }).sort({ startTime: 1 });
+    const sessions = await Session.find({ status: 'Ongoing' }).sort({ startTime: 1 });
     res.status(200).json(sessions);
   }
   catch (error) {
@@ -169,7 +169,7 @@ exports.getActiveSessions = async (req, res) => {
  */
 exports.getUpcomingSessions = async (req, res) => {
   try {
-    const sessions = await JamSession.find({
+    const sessions = await Session.find({
       status: 'Scheduled',
       startTime: { $gte: new Date() },
     }).sort({ startTime: 1 });
@@ -190,7 +190,7 @@ exports.getUpcomingSessions = async (req, res) => {
  */
 exports.getPastSessions = async (req, res) => {
   try {
-    const sessions = await JamSession.find({ status: 'Finished' }).sort({ endTime: -1 });
+    const sessions = await Session.find({ status: 'Finished' }).sort({ endTime: -1 });
     res.status(200).json(sessions);
   }
   catch (error) {

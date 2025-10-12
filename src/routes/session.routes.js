@@ -11,7 +11,7 @@ router.put('/sessions/visibility', sessionController.updateVisibility);
 router.post('/sessions/:id/complete', sessionController.markComplete);
 
 // Session listing routes
-router.get('/sessions', sessionController.getActiveSessions);
+router.get('/sessions/active', sessionController.getActiveSessions);
 router.get('/sessions/upcoming', sessionController.getUpcomingSessions);
 router.get('/sessions/past', sessionController.getPastSessions);
 

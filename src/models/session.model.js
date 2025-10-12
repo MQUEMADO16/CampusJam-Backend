@@ -31,7 +31,7 @@ const jamSessionSchema = new Schema({
     default: 'Scheduled',
   },
 
-  // ession Details
+  // session Details
   startTime: {
     type: Date,
     required: true,
