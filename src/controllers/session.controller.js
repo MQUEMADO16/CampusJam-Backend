@@ -126,9 +126,7 @@ exports.deleteSessionById = async (req, res) => {
         console.error('Erorr deleting session by ID: ', error);
         res.status(500).json({ message: 'Server error while deleting session.' });
     }
-};const Session = require('../models/session.model');
-
-// implement endpoint logic here
+};
 
 /**
  * @desc   Get visibility state of a specific session
