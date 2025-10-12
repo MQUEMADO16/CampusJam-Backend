@@ -77,11 +77,41 @@ exports.getSessionById = async (req, res) => {
 };
 
 /**
+ * @desc  Update a session by its ID
+ * @route PUT /api/sessions/:id
+ */
+exports.updateSession = async (req, res) => {
+    try {
+        const sessionId = req.params.id;
+        const updateData = req.body;
+
+        const updatedSession = await Session.findByIdAndUpdate(
+        sessionId,
+        updateData,
+        { new: true, runValidators: true } // Options: return the new doc, run schema validators
+        ).select('-chatMessages -__v');
+
+        if (!updatedSession) {
+        return res.status(404).json({ message: 'Session not found.' });
+        }
+
+        res.status(200).json({
+        message: 'Session updated successfully.',
+        session: updatedSession
+        });
+    }
+    catch (error) {
+        console.error('Error updating session by ID: ', error);
+        res.status(500).json({ message: 'Server error while updating session.' });
+    }
+};
+
+/**
  * @desc  Delete a session by its ID
  * @route DELETE /api/sessions/:id
  */
 exports.deleteSessionById = async (req, res) => {
-  try {
+    try {
     const sessionId = req.params.id;
 
     const session = await Session.findByIdAndDelete(sessionId);
@@ -91,9 +121,9 @@ exports.deleteSessionById = async (req, res) => {
     }
 
     res.status(200).json({ message: 'Session deleted successfully.' });
-  }
-  catch (error) {
-    console.error('Erorr deleting session by ID: ', error);
-    res.status(500).json({ message: 'Server error while deleting session.' });
-  }
+    }
+    catch (error) {
+        console.error('Erorr deleting session by ID: ', error);
+        res.status(500).json({ message: 'Server error while deleting session.' });
+    }
 };
