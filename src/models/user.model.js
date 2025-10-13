@@ -56,6 +56,11 @@ const userSchema = new Schema({
     },
   },
 
+  joinedSessions: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Session' // This tells Mongoose to reference the 'Session' model
+  }],
+
   // Social Graph & Safety
   connections: {
     following: [{
