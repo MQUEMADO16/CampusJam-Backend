@@ -1,4 +1,6 @@
+const mongoose = require('mongoose');
 const Session = require('../models/session.model');
+const User = require('../models/user.model');
 
 // TODO: implement all endpoint logic
 
@@ -81,29 +83,29 @@ exports.getSessionById = async (req, res) => {
  * @route PUT /api/sessions/:id
  */
 exports.updateSession = async (req, res) => {
-    try {
-        const sessionId = req.params.id;
-        const updateData = req.body;
+  try {
+    const sessionId = req.params.id;
+    const updateData = req.body;
 
-        const updatedSession = await Session.findByIdAndUpdate(
-        sessionId,
-        updateData,
-        { new: true, runValidators: true } // Options: return the new doc, run schema validators
-        ).select('-chatMessages -__v');
+    const updatedSession = await Session.findByIdAndUpdate(
+    sessionId,
+    updateData,
+    { new: true, runValidators: true } // Options: return the new doc, run schema validators
+    ).select('-chatMessages -__v');
 
-        if (!updatedSession) {
-        return res.status(404).json({ message: 'Session not found.' });
-        }
-
-        res.status(200).json({
-        message: 'Session updated successfully.',
-        session: updatedSession
-        });
+    if (!updatedSession) {
+    return res.status(404).json({ message: 'Session not found.' });
     }
-    catch (error) {
-        console.error('Error updating session by ID: ', error);
-        res.status(500).json({ message: 'Server error while updating session.' });
-    }
+
+    res.status(200).json({
+    message: 'Session updated successfully.',
+    session: updatedSession
+    });
+  }
+  catch (error) {
+    console.error('Error updating session by ID: ', error);
+    res.status(500).json({ message: 'Server error while updating session.' });
+  }
 };
 
 /**
@@ -126,6 +128,111 @@ exports.deleteSessionById = async (req, res) => {
         console.error('Erorr deleting session by ID: ', error);
         res.status(500).json({ message: 'Server error while deleting session.' });
     }
+};
+
+/**
+ * @desc Get all users in a session by session ID
+ * @route GET /api/sessions/:id/participants
+ */
+exports.getSessionParticipants = async (req, res) => {
+  try {
+    const sessionId = req.params.id;
+
+    // Find the session and populate the 'user' field within the 'attendees' array
+    const session = await Session.findById(sessionId)
+      .select('attendees')
+      .populate({
+        path: 'attendees.user',
+        select: '-password -__v'
+      });
+
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found.' });
+    }
+
+    const participants = session.attendees;
+
+    res.status(200).json(participants);
+  }
+  catch (error) {
+    console.error('Error fetching session participants:', error);
+    res.status(500).json({ message: 'Server error while fetching participants.' });
+  }
+};
+
+/**
+ * @desc Add a user to a session's attendees list
+ * @route POST /api/sessions/:id/participants
+ */
+exports.addUserToSession = async (req, res) => {
+  try {
+    const { id: sessionId } = req.params;
+    const { userId } = req.body;
+
+    // Validate the format of the provided IDs before querying the database.
+    if (!mongoose.Types.ObjectId.isValid(sessionId) || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid session or user ID format.' });
+    }
+
+    const session = await Session.findById(sessionId);
+
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found.' });
+    }
+
+    if (session.attendees.some(attendee => attendee.equals(userId))) {
+      return res.status(400).json({ message: 'User is already in the session.' });
+    }
+
+    session.attendees.push(userId);
+    await session.save();
+
+    res.status(200).json({
+      message: 'User added to session successfully.',
+      attendees: session.attendees
+    });
+  } catch (error) {
+    console.error('Error adding user to session:', error);
+    res.status(500).json({ message: 'Server error while adding user to session.' });
+  }
+};
+
+/**
+ * @desc Remove a user from a session's attendees list
+ * @route DELETE /api/sessions/:id/participants/:userId
+ */
+exports.removeUserFromSession = async (req, res) => {
+  try {
+    const { id: sessionId, userId } = req.params;
+
+    // Validate IDs
+    if (!mongoose.Types.ObjectId.isValid(sessionId) || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid session or user ID format.' });
+    }
+
+    const session = await Session.findById(sessionId);
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found.' });
+    }
+
+    // Find attendee index (ObjectIds directly)
+    const attendeeIndex = session.attendees.findIndex(attendee => attendee.equals(userId));
+
+    if (attendeeIndex === -1) {
+      return res.status(404).json({ message: 'User is not in this session.' });
+    }
+
+    session.attendees.splice(attendeeIndex, 1);
+    await session.save();
+
+    res.status(200).json({
+      message: 'User removed from session successfully.',
+      attendees: session.attendees
+    });
+  } catch (error) {
+    console.error('Error removing user from session:', error);
+    res.status(500).json({ message: 'Server error while removing user from session.' });
+  }
 };
 
 /**
