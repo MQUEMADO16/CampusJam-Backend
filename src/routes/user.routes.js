@@ -4,10 +4,10 @@ const userController = require('../controllers/user.controller');
 
 // Endpoints
 router.get('/users', userController.getAllUsers);
-router.get('/users/:id', userController.getUserById); // ✅ Added this
+router.get('/users/:id', userController.getUserById);
 router.post('/users', userController.createUser);
 router.put('/users/:id', userController.updateUser);
-router.delete('/:id', userController.deleteUser);    // DELETE /api/users/:id
+router.delete('/:id', userController.deleteUser);
 router.post('/users/:id/friends', userController.addFriend);
 router.put('/:id/password', userController.updatePassword);
 router.put('/users/:id/block', userController.blockUser);
