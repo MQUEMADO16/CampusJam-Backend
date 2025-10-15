@@ -1,5 +1,6 @@
-// src/controllers/user.controller.js
+const mongoose = require('mongoose')
 const User = require('../models/user.model');
+const Session = require('../models/session.model');
 
 // GET /api/users
 exports.getAllUsers = async (req, res) => {
