@@ -1,43 +1,34 @@
-const express = require('express');
+const express = require('express'); // Server.js
 const app = express();
-app.use(express.json());
+app.use(express.json());            
 
-mongoose.connect(process.env.MONGO_URI, {
+const mongoose = require('mongoose');
+const User = require('./src/models/user.model'); 
+
+mongoose.connect(process.env.MONGO_URI, {         //Connects to MongoDB
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
 .then(() => console.log('Connected to MongoDB'))
 .catch(err => console.error('MongoDB connection error:', err));
 
-// ---------------------------------------------
-// User Model (inline for simplicity)
-// ---------------------------------------------
-const userSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  dateOfBirth: { type: Date, required: true },
-});
 
-const User = mongoose.model('User', userSchema);
-
+// GET endpoint to pull up an user based on their username
 app.get('/api/users/search', async (req, res) => {
   try {
-    const { name, email } = req.query;
+    const { name } = req.query;
 
-    if (!name && !email) {
-      return res.status(400).json({ error: 'Please enter a name or email' });
+    if (!name) {
+      return res.status(400).json({ error: 'Please enter a username' });
     }
 
     // Build dynamic search filter
-    const filter = {};
-    if (name) filter.name = new RegExp(name, 'i');   
-    if (email) filter.email = new RegExp(email, 'i');
+    const filter = { name: new RegExp(name, 'i') }; // case-insensitive name search
 
-    const users = await User.find(filter);
+    const users = await User.find(filter).select('-password'); // exclude password field
 
     if (users.length === 0) {
-      return res.status(404).json({ message: 'No results' });
+      return res.status(404).json({ message: 'No matching user' });
     }
 
     res.status(200).json(users);
