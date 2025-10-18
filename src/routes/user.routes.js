@@ -14,5 +14,7 @@ router.put('/users/:id/block', userController.blockUser);
 router.get('/users/:id/blocked', userController.getBlockedUsers);
 router.put('/users/:id/unfriend', userController.removeFriend);
 router.get('/users/:id/friends', userController.getFriends);
+router.post('/users/:id/sessions', userController.addSessionToUser);
+router.delete('/users/:id/sessions/:sessionId', userController.removeSessionFromUser);
 
 module.exports = router;
