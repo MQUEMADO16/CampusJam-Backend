@@ -6,6 +6,7 @@ const sessionController = require('../controllers/session.controller');
 // TODO: Route all endpoints
 
 // Sessions
+
 router.get('/sessions', sessionController.getAllSessions);
 router.post('/sessions', sessionController.createSession);
 
