@@ -7,8 +7,7 @@ const User = require('../models/user.model');
 /**
  * @desc Fetch all sessions
  * @route GET /api/sessions
- * Note: might want to not make this publicly available
- * since this will include private sessions
+ * Note: Only gets public sessions
  */
 exports.getAllSessions = async (req, res) => {
   try {
