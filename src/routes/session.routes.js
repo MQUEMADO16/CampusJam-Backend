@@ -2,8 +2,15 @@ const express = require('express');
 const router = express.Router();
 const sessionController = require('../controllers/session.controller');
 
-// Swagger docs
-// session schema
+// Swagger Docs
+/**
+ * @openapi
+ * tags:
+ *   name: Sessions
+ *   description: REST API Endpoints for managing sessions
+ */
+
+// Session Schema Docs
 /**
  * @openapi
  * components:
@@ -38,21 +45,87 @@ const sessionController = require('../controllers/session.controller');
  *           items: { type: string }
  *         createdAt: { type: string, format: date-time }
  *         updatedAt: { type: string, format: date-time }
- *
- *     VisibilityGetResponse:
- *       type: object
- *       properties:
- *         visibility: { type: boolean, description: "true if public" }
- *
- *     VisibilityChangeRequest:
- *       type: object
- *       required: [sessionId, isPublic]
- *       properties:
- *         sessionId: { type: string, description: "Session ObjectId" }
- *         isPublic: { type: boolean }
  */
 
-//endpoint docs
+// Endpoint Docs
+/**
+ * @openapi
+ * /api/sessions:
+ *   get:
+ *     summary: Get all sessions
+ *     tags: [Sessions]
+ *     responses:
+ *       200:
+ *         description: List of all sessions.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items: { $ref: "#/components/schemas/Session" }
+ *       500: { description: Server error }
+ *   post:
+ *     summary: Create a new session
+ *     tags: [Sessions]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: "#/components/schemas/Session"
+ *     responses:
+ *       201:
+ *         description: Session created successfully
+ *       400: { description: Invalid request body }
+ *       500: { description: Server error }
+ */
+
+/**
+ * @openapi
+ * /api/sessions/{id}:
+ *   get:
+ *     summary: Get session by ID
+ *     tags: [Sessions]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Session found
+ *         content:
+ *           application/json:
+ *             schema: { $ref: "#/components/schemas/Session" }
+ *       404: { description: Session not found }
+ *   put:
+ *     summary: Update a session
+ *     tags: [Sessions]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema: { $ref: "#/components/schemas/Session" }
+ *     responses:
+ *       200: { description: Session updated successfully }
+ *       404: { description: Session not found }
+ *   delete:
+ *     summary: Delete a session
+ *     tags: [Sessions]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: Session deleted successfully }
+ *       404: { description: Session not found }
+ */
+
 /**
  * @openapi
  * /api/sessions/{id}/visibility:
@@ -70,9 +143,7 @@ const sessionController = require('../controllers/session.controller');
  *         content:
  *           application/json:
  *             schema: { $ref: "#/components/schemas/VisibilityGetResponse" }
- *       400: { description: Session ID missing }
  *       404: { description: Session not found }
- *       500: { description: Server error }
  */
 
 /**
@@ -88,9 +159,7 @@ const sessionController = require('../controllers/session.controller');
  *           schema: { $ref: "#/components/schemas/VisibilityChangeRequest" }
  *     responses:
  *       200: { description: Visibility updated }
- *       400: { description: Invalid payload }
  *       404: { description: Session not found }
- *       500: { description: Server error }
  *   put:
  *     summary: Update session visibility
  *     tags: [Sessions]
@@ -101,9 +170,109 @@ const sessionController = require('../controllers/session.controller');
  *           schema: { $ref: "#/components/schemas/VisibilityChangeRequest" }
  *     responses:
  *       200: { description: Visibility updated }
- *       400: { description: Invalid payload }
  *       404: { description: Session not found }
- *       500: { description: Server error }
+ */
+
+/**
+ * @openapi
+ * /api/sessions/active:
+ *   get:
+ *     summary: List active sessions
+ *     tags: [Sessions]
+ *     responses:
+ *       200:
+ *         description: Active sessions retrieved.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items: { $ref: "#/components/schemas/Session" }
+ */
+
+/**
+ * @openapi
+ * /api/sessions/upcoming:
+ *   get:
+ *     summary: List upcoming sessions
+ *     tags: [Sessions]
+ *     responses:
+ *       200:
+ *         description: Upcoming sessions retrieved.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items: { $ref: "#/components/schemas/Session" }
+ */
+
+/**
+ * @openapi
+ * /api/sessions/past:
+ *   get:
+ *     summary: List past sessions
+ *     tags: [Sessions]
+ *     responses:
+ *       200:
+ *         description: Past sessions retrieved.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items: { $ref: "#/components/schemas/Session" }
+ */
+
+/**
+ * @openapi
+ * /api/sessions/{id}/participants:
+ *   get:
+ *     summary: Get session participants
+ *     tags: [Sessions]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: List of participants.
+ *   post:
+ *     summary: Add user to session
+ *     tags: [Sessions]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [userId]
+ *             properties:
+ *               userId: { type: string }
+ *     responses:
+ *       200: { description: User added to session }
+ */
+
+/**
+ * @openapi
+ * /api/sessions/{id}/participants/{userId}:
+ *   delete:
+ *     summary: Remove user from session
+ *     tags: [Sessions]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: User removed from session }
  */
 
 /**
@@ -119,7 +288,7 @@ const sessionController = require('../controllers/session.controller');
  *         schema: { type: string }
  *     responses:
  *       200:
- *         description: Session marked complete.
+ *         description: Session marked as complete.
  *         content:
  *           application/json:
  *             schema:
@@ -127,61 +296,11 @@ const sessionController = require('../controllers/session.controller');
  *               properties:
  *                 message: { type: string }
  *                 session: { $ref: "#/components/schemas/Session" }
- *       404: { description: Session not found }
- *       500: { description: Server error }
  */
 
-/**
- * @openapi
- * /api/sessions/active:
- *   get:
- *     summary: List active sessions
- *     tags: [Sessions]
- *     responses:
- *       200:
- *         description: Active sessions.
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items: { $ref: "#/components/schemas/Session" }
- *       500: { description: Server error }
- *
- * /api/sessions/upcoming:
- *   get:
- *     summary: List upcoming sessions
- *     tags: [Sessions]
- *     responses:
- *       200:
- *         description: Upcoming sessions.
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items: { $ref: "#/components/schemas/Session" }
- *       500: { description: Server error }
- *
- * /api/sessions/past:
- *   get:
- *     summary: List past sessions
- *     tags: [Sessions]
- *     responses:
- *       200:
- *         description: Past sessions.
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items: { $ref: "#/components/schemas/Session" }
- *       500: { description: Server error }
- */
-
-
-// Endpoints
-// TODO: Route all endpoints
+// Routes
 
 // Sessions
-
 router.get('/sessions', sessionController.getAllSessions);
 router.post('/sessions', sessionController.createSession);
 
@@ -207,5 +326,6 @@ router.delete('/sessions/:id/participants/:userId', sessionController.removeUser
 
 // Session state
 router.post('/sessions/:id/complete', sessionController.markComplete);
+
 
 module.exports = router;

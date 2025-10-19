@@ -2,33 +2,31 @@ const express = require('express');
 const router = express.Router();
 const messageController = require('../controllers/message.controller');
 
-//Swagger docs
-//Message schema
+// Swagger Docs
+/**
+ * @openapi
+ * tags:
+ *   name: Messages
+ *   description: REST API Endpoints for sending and managing messages
+ */
+
+// Message Schema Docs
 /**
  * @openapi
  * components:
  *   schemas:
- *     MessageDoc:
+ *     Message:
  *       type: object
  *       properties:
- *         _id: { type: string }
- *         session: { type: string }
- *         sender: { type: string }
- *         content: { type: string, maxLength: 2000 }
+ *         _id: { type: string, description: "Mongo ObjectId" }
+ *         session: { type: string, description: "JamSession ObjectId reference" }
+ *         sender: { type: string, description: "User ObjectId reference" }
+ *         content: { type: string, maxLength: 2000, description: "Message text content" }
  *         createdAt: { type: string, format: date-time }
  *         updatedAt: { type: string, format: date-time }
- *
- *     MessageResponse:
- *       type: object
- *       properties:
- *         content: { type: string }
- *         sender: { type: string, description: "Sender name or ID" }
- *         timeSent: { type: string, format: date-time }
- *
  */
 
-//endpoint docs
-
+// Endpoint Docs
 /**
  * @openapi
  * /api/sessions/{id}/messages:
@@ -136,11 +134,7 @@ const messageController = require('../controllers/message.controller');
  *                 message: { type: string }
  */
 
-
-
-
-// Endpoints
-// Session message routes
+// Routes
 router.get('/sessions/:id/messages', messageController.getSessionMessages);
 router.post('/sessions/:id/messages', messageController.sendSessionMessage);
 
