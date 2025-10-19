@@ -35,6 +35,15 @@ const userSchema = new Schema({
     trim: true,
   },
 
+  // Basic subscription tier implementation
+  subscription: {
+    tier: {
+      type: String,
+      enum: ['basic', 'pro'],
+      default: 'basic',
+    }
+  },
+
   // Musician Profile
   profile: {
     instruments: [{
