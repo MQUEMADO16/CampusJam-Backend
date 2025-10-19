@@ -12,5 +12,6 @@ router.post('/users', userController.createUser);
 // User Sessions
 router.post('/users/:id/sessions', userController.addSessionToUser);
 router.delete('/users/:id/sessions/:sessionId', userController.removeSessionFromUser);
+router.get('/users/:id/activity', userController.getUserActivity);
 
 module.exports = router;
