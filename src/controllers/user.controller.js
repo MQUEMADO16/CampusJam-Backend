@@ -75,3 +75,40 @@ exports.searchUser = async (req,res) => {
     res.status(500).json({ error: 'Failed to search users', details: error.message });
   }
 };
+
+exports.reportUser = async (req,res) => {
+  const Report = require('../models/report.model');
+  const reportedUserId = req.params.id;
+  const { reportedBy, reason } = req.body;
+
+  if (!reportedBy || !reason) {
+    return res.status(400).json({ message: 'Missing reportedBy or reason in request' });
+  }
+
+  try {
+    // Check if the reported user exists
+    const reportedUser = await User.findById(reportedUserId);
+    if (!reportedUser) {
+      return res.status(404).json({ message: 'Reported user not found' });
+    }
+
+    // Optional: Check if the reporter is not reporting themselves
+    if (reportedUserId === reportedBy) {
+      return res.status(400).json({ message: 'You cannot report yourself' });
+    }
+
+    // Save the report
+    const report = new Report({
+      reportedUser: reportedUserId,
+      reportedBy,
+      reason
+    });
+
+    await report.save();
+
+    res.status(201).json({ message: 'User reported successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error while reporting user' });
+  }
+};

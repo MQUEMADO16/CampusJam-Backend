@@ -10,4 +10,6 @@ router.post('/users', userController.createUser);
 
 router.get('/users/search', userController.searchUser);
 
+router.post('/users/:id/report', userController.reportUser);
+
 module.exports = router;
