@@ -8,4 +8,6 @@ router.get('/users', userController.getAllUsers);
 
 router.post('/users', userController.createUser);
 
+router.get('/users/search', userController.searchUser);
+
 module.exports = router;

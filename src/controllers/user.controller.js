@@ -50,3 +50,28 @@ exports.createUser = async (req, res) => {
     });
   }
 };
+
+exports.searchUser = async (req,res) => {
+
+  try {
+    const { name } = req.query;
+
+    if (!name) {
+      return res.status(400).json({ error: 'Please enter a username' });
+    }
+
+    // Build dynamic search filter
+    const filter = { name: new RegExp(name, 'i') }; // case-insensitive name search
+
+    const users = await User.find(filter).select('-password'); // exclude password field
+
+    if (users.length === 0) {
+      return res.status(404).json({ message: 'No matching user' });
+    }
+
+    res.status(200).json(users);
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ error: 'Failed to search users', details: error.message });
+  }
+};
