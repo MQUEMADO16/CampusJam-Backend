@@ -341,3 +341,45 @@ exports.getFriends = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch friends.' });
   }
 };
+
+// Subscription related endpoints
+exports.getSubscription = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('subscription');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({ subscription: user.subscription });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.updateSubscription = async (req, res) => {
+  const { tier } = req.body;
+
+  if (!['basic', 'pro'].includes(tier)) {
+    return res.status(400).json({ message: 'Invalid subscription tier' });
+  }
+
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.subscription.tier = tier;
+    await user.save();
+
+    res.status(200).json({ message: 'Subscription updated', subscription: user.subscription });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
