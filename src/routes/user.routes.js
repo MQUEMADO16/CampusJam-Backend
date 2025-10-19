@@ -16,5 +16,7 @@ router.put('/users/:id/unfriend', userController.removeFriend);
 router.get('/users/:id/friends', userController.getFriends);
 router.post('/users/:id/sessions', userController.addSessionToUser);
 router.delete('/users/:id/sessions/:sessionId', userController.removeSessionFromUser);
+router.get('/users/:id/subscription', userController.getSubscription);
+router.put('/users/:id/subscription', userController.updateSubscription);
 
 module.exports = router;
