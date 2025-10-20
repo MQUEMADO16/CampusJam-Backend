@@ -1,4 +1,4 @@
-/**
+/*
  * Defines the Mongoose schema for a User.
  * This model captures all user-specific information, including authentication
  * and profile details to social connections and API integrations.

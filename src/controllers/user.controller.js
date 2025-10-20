@@ -2,7 +2,6 @@ const mongoose = require('mongoose')
 const User = require('../models/user.model');
 const Session = require('../models/session.model');
 
-
 /**
  * @desc  Fetch all users
  * @route GET /api/users
@@ -342,6 +341,46 @@ exports.getFriends = async (req, res) => {
   }
 };
 
+// Subscription related endpoints
+exports.getSubscription = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('subscription');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({ subscription: user.subscription });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.updateSubscription = async (req, res) => {
+  const { tier } = req.body;
+
+  if (!['basic', 'pro'].includes(tier)) {
+    return res.status(400).json({ message: 'Invalid subscription tier' });
+  }
+
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.subscription.tier = tier;
+    await user.save();
+
+    res.status(200).json({ message: 'Subscription updated', subscription: user.subscription });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 // Get an user's joined/hosted sessions
 exports.getUserActivity = async (req, res) => {
   try {
@@ -358,18 +397,18 @@ exports.getUserActivity = async (req, res) => {
     }
 
     // Fetch user's hosted jam sessions
-    const hostedSessions = await JamSession.find({ host: id })
+    const hostedSessions = await Session.find({ host: id })
       .populate('attendees', 'name email')
       .populate('invitedUsers', 'name email')
       .sort({ startTime: -1 });
 
     // Fetch user's joined sessions
-    const joinedSessions = await JamSession.find({ attendees: id })
+    const joinedSessions = await Session.find({ attendees: id })
       .populate('host', 'name email')
       .sort({ startTime: -1 });
 
     // Fetch sessions they're invited to
-    const invitedSessions = await JamSession.find({ invitedUsers: id })
+    const invitedSessions = await Session.find({ invitedUsers: id })
       .populate('host', 'name email')
       .sort({ startTime: -1 });
 
@@ -438,47 +477,6 @@ exports.reportUser = async (req,res) => {
     console.error(error);
     res.status(500).json({ message: 'Server error while reporting user' });
   }
-};
-
-// Subscription related endpoints
-exports.getSubscription = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id).select('subscription');
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    res.status(200).json({ subscription: user.subscription });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-exports.updateSubscription = async (req, res) => {
-  const { tier } = req.body;
-
-  if (!['basic', 'pro'].includes(tier)) {
-    return res.status(400).json({ message: 'Invalid subscription tier' });
-  }
-
-  try {
-    const user = await User.findById(req.params.id);
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    user.subscription.tier = tier;
-    await user.save();
-
-    res.status(200).json({ message: 'Subscription updated', subscription: user.subscription });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-
 };
 
 // GET users with matching usernames to given input
