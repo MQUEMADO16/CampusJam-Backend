@@ -128,6 +128,83 @@ const sessionController = require('../controllers/session.controller');
 
 /**
  * @openapi
+ * /api/sessions/{id}/complete:
+ *   post:
+ *     summary: Mark session as complete
+ *     tags: [Sessions]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Session marked as complete.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string }
+ *                 session: { $ref: "#/components/schemas/Session" }
+ */
+
+/**
+ * @openapi
+ * /api/sessions/{id}/participants:
+ *   get:
+ *     summary: Get session participants
+ *     tags: [Sessions]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: List of participants.
+ *   post:
+ *     summary: Add user to session
+ *     tags: [Sessions]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [userId]
+ *             properties:
+ *               userId: { type: string }
+ *     responses:
+ *       200: { description: User added to session }
+ */
+
+/**
+ * @openapi
+ * /api/sessions/{id}/participants/{userId}:
+ *   delete:
+ *     summary: Remove user from session
+ *     tags: [Sessions]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: User removed from session }
+ */
+
+/**
+ * @openapi
  * /api/sessions/{id}/visibility:
  *   get:
  *     summary: Get session visibility
@@ -140,9 +217,6 @@ const sessionController = require('../controllers/session.controller');
  *     responses:
  *       200:
  *         description: Visibility state.
- *         content:
- *           application/json:
- *             schema: { $ref: "#/components/schemas/VisibilityGetResponse" }
  *       404: { description: Session not found }
  */
 
@@ -219,83 +293,6 @@ const sessionController = require('../controllers/session.controller');
  *             schema:
  *               type: array
  *               items: { $ref: "#/components/schemas/Session" }
- */
-
-/**
- * @openapi
- * /api/sessions/{id}/participants:
- *   get:
- *     summary: Get session participants
- *     tags: [Sessions]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string }
- *     responses:
- *       200:
- *         description: List of participants.
- *   post:
- *     summary: Add user to session
- *     tags: [Sessions]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string }
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [userId]
- *             properties:
- *               userId: { type: string }
- *     responses:
- *       200: { description: User added to session }
- */
-
-/**
- * @openapi
- * /api/sessions/{id}/participants/{userId}:
- *   delete:
- *     summary: Remove user from session
- *     tags: [Sessions]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string }
- *       - in: path
- *         name: userId
- *         required: true
- *         schema: { type: string }
- *     responses:
- *       200: { description: User removed from session }
- */
-
-/**
- * @openapi
- * /api/sessions/{id}/complete:
- *   post:
- *     summary: Mark session as complete
- *     tags: [Sessions]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string }
- *     responses:
- *       200:
- *         description: Session marked as complete.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message: { type: string }
- *                 session: { $ref: "#/components/schemas/Session" }
  */
 
 // Routes
