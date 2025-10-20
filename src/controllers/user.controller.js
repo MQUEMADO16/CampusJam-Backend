@@ -19,6 +19,33 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
+// GET users with matching usernames to given input
+// TODO: Rework it so the searches reveal less information
+exports.searchUser = async (req,res) => {
+
+  try {
+    const { name } = req.query;
+
+    if (!name) {
+      return res.status(400).json({ error: 'Please enter a username' });
+    }
+
+    // Build dynamic search filter
+    const filter = { name: new RegExp(name, 'i') }; // case-insensitive name search
+
+    const users = await User.find(filter).select('-password'); // exclude password field
+
+    if (users.length === 0) {
+      return res.status(404).json({ message: 'No matching user' });
+    }
+
+    res.status(200).json(users);
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ error: 'Failed to search users', details: error.message });
+  }
+};
+
 // TODO: add password hashing
 /**
  * @desc  Create a new user (Simplified for initial testing)
@@ -478,30 +505,3 @@ exports.reportUser = async (req,res) => {
     res.status(500).json({ message: 'Server error while reporting user' });
   }
 };
-
-// GET users with matching usernames to given input
-exports.searchUser = async (req,res) => {
-
-  try {
-    const { name } = req.query;
-
-    if (!name) {
-      return res.status(400).json({ error: 'Please enter a username' });
-    }
-
-    // Build dynamic search filter
-    const filter = { name: new RegExp(name, 'i') }; // case-insensitive name search
-
-    const users = await User.find(filter).select('-password'); // exclude password field
-
-    if (users.length === 0) {
-      return res.status(404).json({ message: 'No matching user' });
-    }
-
-    res.status(200).json(users);
-  } catch (error) {
-    console.error('Error searching users:', error);
-    res.status(500).json({ error: 'Failed to search users', details: error.message });
-  }
-};
-
