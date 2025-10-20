@@ -2,7 +2,6 @@ const mongoose = require('mongoose')
 const User = require('../models/user.model');
 const Session = require('../models/session.model');
 
-
 /**
  * @desc  Fetch all users
  * @route GET /api/users
@@ -382,4 +381,127 @@ exports.updateSubscription = async (req, res) => {
   }
 };
 
+// Get an user's joined/hosted sessions
+exports.getUserActivity = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    // Confirm user exists
+    const user = await User.findById(id).select('name email');
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Fetch user's hosted jam sessions
+    const hostedSessions = await Session.find({ host: id })
+      .populate('attendees', 'name email')
+      .populate('invitedUsers', 'name email')
+      .sort({ startTime: -1 });
+
+    // Fetch user's joined sessions
+    const joinedSessions = await Session.find({ attendees: id })
+      .populate('host', 'name email')
+      .sort({ startTime: -1 });
+
+    // Fetch sessions they're invited to
+    const invitedSessions = await Session.find({ invitedUsers: id })
+      .populate('host', 'name email')
+      .sort({ startTime: -1 });
+
+    // Check for activity
+    if (
+      hostedSessions.length === 0 &&
+      joinedSessions.length === 0 &&
+      invitedSessions.length === 0
+    ) {
+      return res.status(404).json({ message: 'No activity found for this user.' });
+    }
+
+    // Combine and format response
+    res.status(200).json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email
+      },
+      hostedSessions,
+      joinedSessions,
+      invitedSessions
+    });
+  } catch (error) {
+    console.error('Error fetching user activity:', error);
+    res.status(500).json({
+      error: 'Failed to fetch user activity',
+      details: error.message,
+    });
+  }
+};
+
+// Report an user
+exports.reportUser = async (req,res) => {
+  const Report = require('../models/report.model');
+  const reportedUserId = req.params.id;
+  const { reportedBy, reason } = req.body;
+
+  if (!reportedBy || !reason) {
+    return res.status(400).json({ message: 'Missing reportedBy or reason in request' });
+  }
+
+  try {
+    // Check if the reported user exists
+    const reportedUser = await User.findById(reportedUserId);
+    if (!reportedUser) {
+      return res.status(404).json({ message: 'Reported user not found' });
+    }
+
+    // Optional: Check if the reporter is not reporting themselves
+    if (reportedUserId === reportedBy) {
+      return res.status(400).json({ message: 'You cannot report yourself' });
+    }
+
+    // Save the report
+    const report = new Report({
+      reportedUser: reportedUserId,
+      reportedBy,
+      reason
+    });
+
+    await report.save();
+
+    res.status(201).json({ message: 'User reported successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error while reporting user' });
+  }
+};
+
+// GET users with matching usernames to given input
+exports.searchUser = async (req,res) => {
+
+  try {
+    const { name } = req.query;
+
+    if (!name) {
+      return res.status(400).json({ error: 'Please enter a username' });
+    }
+
+    // Build dynamic search filter
+    const filter = { name: new RegExp(name, 'i') }; // case-insensitive name search
+
+    const users = await User.find(filter).select('-password'); // exclude password field
+
+    if (users.length === 0) {
+      return res.status(404).json({ message: 'No matching user' });
+    }
+
+    res.status(200).json(users);
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ error: 'Failed to search users', details: error.message });
+  }
+};
 

@@ -484,21 +484,157 @@ const userController = require('../controllers/user.controller');
  *                 $ref: "#/components/schemas/User"
  */
 
+// --------------------- ACTIVITY ---------------------
+
+/**
+ * @openapi
+ * /api/users/{id}/activity:
+ *   get:
+ *     summary: Get a user's joined, hosted, and invited sessions
+ *     description: Returns all jam sessions the user is hosting, attending, or invited to.
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *         description: User ID (Mongo ObjectId)
+ *     responses:
+ *       200:
+ *         description: User activity retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   $ref: "#/components/schemas/User"
+ *                 hostedSessions:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                     description: "Session ObjectId"
+ *                 joinedSessions:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                     description: "Session ObjectId"
+ *                 invitedSessions:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                     description: "Session ObjectId"
+ *       404:
+ *         description: No activity found for this user.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string }
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string }
+ */
+
+// --------------------- REPORTS ---------------------
+
+/**
+ * @openapi
+ * /api/users/{id}/report:
+ *   post:
+ *     summary: Report a user
+ *     description: Creates a report against a user for inappropriate behavior.
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *         description: Reported User ID (Mongo ObjectId)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [reportedBy, reason]
+ *             properties:
+ *               reportedBy:
+ *                 type: string
+ *                 description: User ID of the reporter
+ *               reason:
+ *                 type: string
+ *                 description: Reason for reporting
+ *     responses:
+ *       201:
+ *         description: User reported successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "User reported successfully"
+ *       400:
+ *         description: Invalid input (missing fields or reporting self)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string }
+ *       404:
+ *         description: Reported user not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string }
+ *       500:
+ *          description: Server error
+ *          content:
+ *            application/json:
+ *              schema:
+ *                  type: object
+ *                  properties:
+ *                    message:
+ *                      type: string
+ */
+
 // Routes
+
 router.get('/users', userController.getAllUsers);
 router.get('/users/:id', userController.getUserById);
 router.post('/users', userController.createUser);
 router.put('/users/:id', userController.updateUser);
 router.delete('/users/:id', userController.deleteUser);
+
 router.post('/users/:id/friends', userController.addFriend);
+router.put('/users/:id/unfriend', userController.removeFriend);
+router.get('/users/:id/friends', userController.getFriends);
+
 router.put('/users/:id/password', userController.updatePassword);
 router.put('/users/:id/block', userController.blockUser);
 router.get('/users/:id/blocked', userController.getBlockedUsers);
-router.put('/users/:id/unfriend', userController.removeFriend);
-router.get('/users/:id/friends', userController.getFriends);
+
 router.post('/users/:id/sessions', userController.addSessionToUser);
 router.delete('/users/:id/sessions/:sessionId', userController.removeSessionFromUser);
 router.get('/users/:id/subscription', userController.getSubscription);
 router.put('/users/:id/subscription', userController.updateSubscription);
+
+router.get('/users/:id/subscription', userController.getSubscription);
+router.put('/users/:id/subscription', userController.updateSubscription);
+
+router.get('/users/:id/activity', userController.getUserActivity);
+router.post('/users/:id/report', userController.reportUser);
+router.get('/users/search', userController.searchUser);
 
 module.exports = router;
