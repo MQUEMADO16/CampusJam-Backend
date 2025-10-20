@@ -19,11 +19,11 @@ const userController = require('../controllers/user.controller');
  *       type: object
  *       properties:
  *         _id: { type: string, description: "Mongo ObjectId" }
- *         name: { type: string, description: "User's full name" }
- *         email: { type: string, format: email, description: "User's email address (unique)" }
- *         password: { type: string, description: "Hashed user password" }
- *         dateOfBirth: { type: string, format: date, description: "User's date of birth" }
- *         campus: { type: string, nullable: true, description: "Campus name or identifier" }
+ *         name: { type: string, description: "User's full name", example: "Miguel Quemado" }
+ *         email: { type: string, format: email, description: "User's email address (unique)", example: "miguel@example.com" }
+ *         password: { type: string, description: "Hashed user password", example: "MySecretPassword123" }
+ *         dateOfBirth: { type: string, format: date, description: "User's date of birth", example: "2000-01-01" }
+ *         campus: { type: string, nullable: true, description: "Campus name or identifier", example: "Main Campus" }
  *         subscription:
  *           type: object
  *           properties:
@@ -38,17 +38,18 @@ const userController = require('../controllers/user.controller');
  *             instruments:
  *               type: array
  *               items: { type: string }
+ *               example: ["Guitar", "Piano"]
  *             genres:
  *               type: array
  *               items: { type: string }
+ *               example: ["Jazz", "Blues"]
  *             skillLevel:
  *               type: string
  *               enum: [Beginner, Intermediate, Advanced, Expert]
  *               default: Beginner
- *             bio: { type: string, maxLength: 500, nullable: true }
+ *             bio: { type: string, maxLength: 500, nullable: true, example: "I love playing jazz guitar." }
  *         joinedSessions:
  *           type: array
- *           description: "List of sessions the user has joined"
  *           items: { type: string, description: "Session ObjectId reference" }
  *         connections:
  *           type: object
@@ -73,11 +74,13 @@ const userController = require('../controllers/user.controller');
  *                 topGenres:
  *                   type: array
  *                   items: { type: string }
+ *                   example: ["Jazz", "Funk"]
  *         createdAt: { type: string, format: date-time }
  *         updatedAt: { type: string, format: date-time }
  */
 
-// Endpoint Docs
+// --------------------- USER CRUD ---------------------
+
 /**
  * @openapi
  * /api/users:
@@ -87,25 +90,14 @@ const userController = require('../controllers/user.controller');
  *     responses:
  *       200:
  *         description: A list of all users
- *   post:
- *     summary: Create a new user
- *     tags: [Users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       201:
- *         description: User created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: "#/components/schemas/User"
+ *       500:
+ *         description: Server error
  */
 
 /**
@@ -117,21 +109,66 @@ const userController = require('../controllers/user.controller');
  *     parameters:
  *       - in: path
  *         name: id
- *         schema:
- *           type: string
+ *         schema: { type: string }
  *         required: true
  *         description: User ID
  *     responses:
  *       200:
  *         description: User found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/User"
+ *       404:
+ *         description: User not found
+ */
+
+/**
+ * @openapi
+ * /api/users:
+ *   post:
+ *     summary: Create a new user
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name, email, password]
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Miguel Quemado"
+ *               email:
+ *                 type: string
+ *                 example: "miguel@example.com"
+ *               password:
+ *                 type: string
+ *                 example: "MySecretPassword123"
+ *     responses:
+ *       201:
+ *         description: User created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/User"
+ *       400:
+ *         description: Invalid input
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @openapi
+ * /api/users/{id}:
  *   put:
  *     summary: Update a user
  *     tags: [Users]
  *     parameters:
  *       - in: path
  *         name: id
- *         schema:
- *           type: string
+ *         schema: { type: string }
  *         required: true
  *         description: User ID
  *     requestBody:
@@ -143,25 +180,37 @@ const userController = require('../controllers/user.controller');
  *             properties:
  *               name:
  *                 type: string
+ *                 example: "Miguel Q."
  *               email:
  *                 type: string
+ *                 example: "miguelq@example.com"
  *     responses:
  *       200:
  *         description: User updated successfully
+ *       404:
+ *         description: User not found
+ */
+
+/**
+ * @openapi
+ * /api/users/{id}:
  *   delete:
  *     summary: Delete a user
  *     tags: [Users]
  *     parameters:
  *       - in: path
  *         name: id
- *         schema:
- *           type: string
+ *         schema: { type: string }
  *         required: true
  *         description: User ID
  *     responses:
  *       200:
  *         description: User deleted successfully
+ *       404:
+ *         description: User not found
  */
+
+// --------------------- FRIENDS ---------------------
 
 /**
  * @openapi
@@ -172,21 +221,30 @@ const userController = require('../controllers/user.controller');
  *     parameters:
  *       - in: path
  *         name: id
- *         schema:
- *           type: string
+ *         schema: { type: string }
  *         required: true
  *         description: User ID
  *     responses:
  *       200:
  *         description: List of friends
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: "#/components/schemas/User"
+ */
+
+/**
+ * @openapi
+ * /api/users/{id}/friends:
  *   post:
  *     summary: Add a friend
  *     tags: [Users]
  *     parameters:
  *       - in: path
  *         name: id
- *         schema:
- *           type: string
+ *         schema: { type: string }
  *         required: true
  *         description: User ID
  *     requestBody:
@@ -195,9 +253,11 @@ const userController = require('../controllers/user.controller');
  *         application/json:
  *           schema:
  *             type: object
+ *             required: [friendId]
  *             properties:
  *               friendId:
  *                 type: string
+ *                 example: "671282ea3e05d63f11a8f89b"
  *     responses:
  *       200:
  *         description: Friend added successfully
@@ -212,8 +272,7 @@ const userController = require('../controllers/user.controller');
  *     parameters:
  *       - in: path
  *         name: id
- *         schema:
- *           type: string
+ *         schema: { type: string }
  *         required: true
  *         description: User ID
  *     requestBody:
@@ -222,13 +281,126 @@ const userController = require('../controllers/user.controller');
  *         application/json:
  *           schema:
  *             type: object
+ *             required: [friendId]
  *             properties:
  *               friendId:
  *                 type: string
+ *                 example: "671282ea3e05d63f11a8f89b"
  *     responses:
  *       200:
  *         description: Friend removed successfully
  */
+
+// --------------------- SESSIONS ---------------------
+
+/**
+ * @openapi
+ * /api/users/{id}/sessions:
+ *   post:
+ *     summary: Add a session to a user
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema: { type: string }
+ *         required: true
+ *         description: User ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [sessionId]
+ *             properties:
+ *               sessionId:
+ *                 type: string
+ *                 example: "671282ea3e05d63f11a8f89b"
+ *     responses:
+ *       200:
+ *         description: Session added to user successfully
+ */
+
+/**
+ * @openapi
+ * /api/users/{id}/sessions/{sessionId}:
+ *   delete:
+ *     summary: Remove a session from a user (leave)
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema: { type: string }
+ *         required: true
+ *         description: User ID
+ *       - in: path
+ *         name: sessionId
+ *         schema: { type: string }
+ *         required: true
+ *         description: Session ID
+ *     responses:
+ *       200:
+ *         description: Session removed from user successfully
+ */
+
+// --------------------- SUBSCRIPTION ---------------------
+
+/**
+ * @openapi
+ * /api/users/{id}/subscription:
+ *   get:
+ *     summary: Get a user's subscription
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema: { type: string }
+ *         required: true
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: Subscription info retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 tier:
+ *                   type: string
+ *                   enum: [basic, pro]
+ *                   example: "pro"
+ */
+
+/**
+ * @openapi
+ * /api/users/{id}/subscription:
+ *   put:
+ *     summary: Update a user's subscription
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema: { type: string }
+ *         required: true
+ *         description: User ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [tier]
+ *             properties:
+ *               tier:
+ *                 type: string
+ *                 enum: [basic, pro]
+ *                 example: "pro"
+ *     responses:
+ *       200:
+ *         description: Subscription updated successfully
+ */
+
+// --------------------- SECURITY / PRIVACY ---------------------
 
 /**
  * @openapi
@@ -239,8 +411,7 @@ const userController = require('../controllers/user.controller');
  *     parameters:
  *       - in: path
  *         name: id
- *         schema:
- *           type: string
+ *         schema: { type: string }
  *         required: true
  *         description: User ID
  *     requestBody:
@@ -249,11 +420,14 @@ const userController = require('../controllers/user.controller');
  *         application/json:
  *           schema:
  *             type: object
+ *             required: [oldPassword, newPassword]
  *             properties:
  *               oldPassword:
  *                 type: string
+ *                 example: "OldPass123"
  *               newPassword:
  *                 type: string
+ *                 example: "NewSecurePass456"
  *     responses:
  *       200:
  *         description: Password updated successfully
@@ -268,8 +442,7 @@ const userController = require('../controllers/user.controller');
  *     parameters:
  *       - in: path
  *         name: id
- *         schema:
- *           type: string
+ *         schema: { type: string }
  *         required: true
  *         description: User ID performing the block
  *     requestBody:
@@ -278,9 +451,11 @@ const userController = require('../controllers/user.controller');
  *         application/json:
  *           schema:
  *             type: object
+ *             required: [targetId]
  *             properties:
  *               targetId:
  *                 type: string
+ *                 example: "671282ea3e05d63f11a8f89b"
  *     responses:
  *       200:
  *         description: User blocked successfully
@@ -295,13 +470,18 @@ const userController = require('../controllers/user.controller');
  *     parameters:
  *       - in: path
  *         name: id
- *         schema:
- *           type: string
+ *         schema: { type: string }
  *         required: true
  *         description: User ID
  *     responses:
  *       200:
  *         description: List of blocked users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: "#/components/schemas/User"
  */
 
 // Routes
