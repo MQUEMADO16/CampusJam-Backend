@@ -612,6 +612,7 @@ const userController = require('../controllers/user.controller');
 // Routes
 
 router.get('/users', userController.getAllUsers);
+router.get('/users/search', userController.searchUser);
 router.get('/users/:id', userController.getUserById);
 router.post('/users', userController.createUser);
 router.put('/users/:id', userController.updateUser);
@@ -627,14 +628,11 @@ router.get('/users/:id/blocked', userController.getBlockedUsers);
 
 router.post('/users/:id/sessions', userController.addSessionToUser);
 router.delete('/users/:id/sessions/:sessionId', userController.removeSessionFromUser);
-router.get('/users/:id/subscription', userController.getSubscription);
-router.put('/users/:id/subscription', userController.updateSubscription);
 
 router.get('/users/:id/subscription', userController.getSubscription);
 router.put('/users/:id/subscription', userController.updateSubscription);
 
 router.get('/users/:id/activity', userController.getUserActivity);
 router.post('/users/:id/report', userController.reportUser);
-router.get('/users/search', userController.searchUser);
 
 module.exports = router;
