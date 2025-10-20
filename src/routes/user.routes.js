@@ -46,14 +46,15 @@ const userController = require('../controllers/user.controller');
  *               type: object
  *               properties:
  *                 message: { type: string }
- *       500:
- *         description: Server error.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message: { type: string }
+*       500:
+*         description: Server error
+*         content:
+*           application/json:
+*             schema:
+*               type: object
+*               properties:
+*                 message:
+*                   type: string
  */
 
 /**
@@ -111,13 +112,14 @@ const userController = require('../controllers/user.controller');
  *               properties:
  *                 message: { type: string }
  *       500:
- *         description: Server error.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message: { type: string }
+ *          description: Server error
+ *          content:
+ *            application/json:
+ *              schema:
+ *                  type: object
+ *                  properties:
+ *                    message:
+ *                      type: string
  */
 
 /**
@@ -214,6 +216,7 @@ const userController = require('../controllers/user.controller');
  *           application/json:
  *             schema:
  *               type: object
+ *               properties:
  *                 message: { type: string }
  */
 
