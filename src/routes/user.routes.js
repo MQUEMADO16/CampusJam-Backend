@@ -627,6 +627,8 @@ router.get('/users/:id/blocked', userController.getBlockedUsers);
 
 router.post('/users/:id/sessions', userController.addSessionToUser);
 router.delete('/users/:id/sessions/:sessionId', userController.removeSessionFromUser);
+router.get('/users/:id/subscription', userController.getSubscription);
+router.put('/users/:id/subscription', userController.updateSubscription);
 
 router.get('/users/:id/subscription', userController.getSubscription);
 router.put('/users/:id/subscription', userController.updateSubscription);
