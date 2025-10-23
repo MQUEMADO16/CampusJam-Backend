@@ -1,5 +1,4 @@
 const express = require('express');
-const cors = require('cors');
 const path = require('path');
 const dotenv = require('dotenv');
 const swaggerJsDoc = require('swagger-jsdoc');
@@ -16,7 +15,6 @@ connectDB();
 const app = express();
 
 // Middleware
-app.use(cors());
 app.use(express.json());
 
 // Swagger Configurations
