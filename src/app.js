@@ -68,7 +68,4 @@ app.use('/api/users', authMiddleware, userRoutes);
 app.use('/api/sessions', authMiddleware, sessionRoutes);
 app.use('/api/messages', authMiddleware, messageRoutes);
 
-// Health check endpoint
-app.get('/', (req, res) => res.send('CampusJam API is running 🚀'));
-
 module.exports = app;
