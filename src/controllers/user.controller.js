@@ -1,4 +1,5 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const User = require('../models/user.model');
 const Session = require('../models/session.model');
 
@@ -28,14 +29,27 @@ exports.createUser = async (req, res) => {
   try {
     const { name, email, password, dateOfBirth } = req.body;
 
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists with this email.' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     const newUser = new User({
       name,
       email,
-      password, // Storing password in plain text ONLY for this initial test.
+      password: hashedPassword,
       dateOfBirth,
     });
 
     await newUser.save();
+
+    // Remove password hash from the response
+    const userResponse = newUser.toObject();
+    delete userResponse.password;
 
     res.status(201).json({
       message: 'SUCCESS: User was created and saved to the database.',
@@ -218,29 +232,38 @@ exports.addFriend = async (req, res) => {
 };
 // Update password with old password check
 exports.updatePassword = async (req, res) => {
-  const { id } = req.params;
+const { id } = req.params;
   const { oldPassword, newPassword } = req.body;
 
   if (!oldPassword || !newPassword) {
     return res.status(400).json({ error: 'Old password and new password are required.' });
   }
 
+  if (oldPassword === newPassword) {
+    return res.status(400).json({ error: 'New password cannot be the same as the old password.' });
+  }
+
   try {
     const user = await User.findById(id);
-    if (!user) return res.status(404).json({ error: 'User not found.' });
-
-    // Check old password
-    if (user.password !== oldPassword) { // In production, use bcrypt.compare()
-      return res.status(401).json({ error: 'Old password is incorrect.' });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
     }
 
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Old password is incorrect.' });
+    }
+    
+    const salt = await bcrypt.genSalt(10);
+    const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+
     // Update password
-    user.password = newPassword; // In production, hash this!
+    user.password = hashedNewPassword; // Store the new hashed password
     await user.save();
 
     res.status(200).json({ message: 'Password updated successfully.' });
   } catch (error) {
-    console.error(error);
+    console.error('Error updating password:', error);
     res.status(500).json({ error: 'Failed to update password.' });
   }
 };
