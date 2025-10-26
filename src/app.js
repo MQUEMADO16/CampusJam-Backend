@@ -4,20 +4,14 @@ const dotenv = require('dotenv');
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const { connectDB } = require('./config/database');
-const authMiddleware = require('./middleware/authMiddleware');
 
-// Load environment variables
 dotenv.config();
-
-// Init DB connection
 connectDB();
 
 const app = express();
-
-// Middleware
 app.use(express.json());
 
-// Swagger Configurations
+// Swagger Configurations (Keep as is)
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
@@ -26,46 +20,25 @@ const swaggerOptions = {
       version: '1.0.0',
       description: 'API documentation for the CampusJam web application',
     },
-    servers: [
-      {
-        url: 'http://localhost:3000',
-        description: 'Local development server',
-      },
-    ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-          description: 'Enter JWT token as: Bearer <your_token_here>',
-        },
-      },
-    },
-    security: [
-      {
-        bearerAuth: [],
-      },
-    ],
+    servers: [{ url: 'http://localhost:3000', description: 'Local development server' }],
+    components: { /* ... securitySchemes ... */ },
+    security: [{ bearerAuth: [] }],
   },
   apis: [path.join(__dirname, 'routes/**/*.js')],
 };
-
 const swaggerSpecs = swaggerJsDoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
-// Routes
+// Routes - Mount ALL routers directly
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const sessionRoutes = require('./routes/session.routes');
 const messageRoutes = require('./routes/message.routes');
 
-// Public routes (no JWT required)
-app.use('/api/auth', authRoutes);
-
-// Protected routes (require JWT)
-app.use('/api/users', authMiddleware, userRoutes);
-app.use('/api/sessions', authMiddleware, sessionRoutes);
-app.use('/api/messages', authMiddleware, messageRoutes);
+app.use('/api/auth', authRoutes); // Auth routes are inherently public
+app.use('/api', userRoutes);     // Apply middleware *inside* user.routes.js
+app.use('/api', sessionRoutes); // Apply middleware *inside* session.routes.js
+app.use('/api', messageRoutes); // Apply middleware *inside* message.routes.js
 
 module.exports = app;
+

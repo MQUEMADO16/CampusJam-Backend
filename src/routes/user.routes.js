@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/user.controller');
+const authMiddleware = require('../middleware/authMiddleware');
 
 // Swagger Docs
 /**
@@ -611,30 +612,33 @@ const userController = require('../controllers/user.controller');
 
 // Routes
 
+// Public
 router.get('/users', userController.getAllUsers);
 router.get('/users/:id', userController.getUserById);
 router.post('/users', userController.createUser);
-router.put('/users/:id', userController.updateUser);
-router.delete('/users/:id', userController.deleteUser);
-
-router.post('/users/:id/friends', userController.addFriend);
-router.put('/users/:id/unfriend', userController.removeFriend);
-router.get('/users/:id/friends', userController.getFriends);
-
-router.put('/users/:id/password', userController.updatePassword);
-router.put('/users/:id/block', userController.blockUser);
-router.get('/users/:id/blocked', userController.getBlockedUsers);
-
-router.post('/users/:id/sessions', userController.addSessionToUser);
-router.delete('/users/:id/sessions/:sessionId', userController.removeSessionFromUser);
-router.get('/users/:id/subscription', userController.getSubscription);
-router.put('/users/:id/subscription', userController.updateSubscription);
-
-router.get('/users/:id/subscription', userController.getSubscription);
-router.put('/users/:id/subscription', userController.updateSubscription);
-
-router.get('/users/:id/activity', userController.getUserActivity);
-router.post('/users/:id/report', userController.reportUser);
 router.get('/users/search', userController.searchUser);
+
+// Protected
+router.put('/users/:id', authMiddleware, userController.updateUser);
+router.delete('/users/:id', authMiddleware, userController.deleteUser);
+
+router.post('/users/:id/friends', authMiddleware, userController.addFriend);
+router.put('/users/:id/unfriend', authMiddleware, userController.removeFriend);
+router.get('/users/:id/friends', authMiddleware, userController.getFriends);
+
+router.put('/users/:id/password', authMiddleware, userController.updatePassword);
+router.put('/users/:id/block', authMiddleware, userController.blockUser);
+router.get('/users/:id/blocked', authMiddleware, userController.getBlockedUsers);
+
+router.post('/users/:id/sessions', authMiddleware, userController.addSessionToUser);
+router.delete('/users/:id/sessions/:sessionId', authMiddleware, userController.removeSessionFromUser);
+router.get('/users/:id/subscription', authMiddleware, userController.getSubscription);
+router.put('/users/:id/subscription', authMiddleware, userController.updateSubscription);
+
+router.get('/users/:id/subscription', authMiddleware, userController.getSubscription);
+router.put('/users/:id/subscription', authMiddleware, userController.updateSubscription);
+
+router.get('/users/:id/activity', authMiddleware, userController.getUserActivity);
+router.post('/users/:id/report', authMiddleware, userController.reportUser);
 
 module.exports = router;
