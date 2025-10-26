@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const sessionController = require('../controllers/session.controller');
+const authMiddleware = require('../middleware/authMiddleware');
 
 // Swagger Docs
 /**
@@ -297,32 +298,24 @@ const sessionController = require('../controllers/session.controller');
 
 // Routes
 
-// Sessions
+// Public
 router.get('/sessions', sessionController.getAllSessions);
-router.post('/sessions', sessionController.createSession);
-
-// Session visibility
 router.get('/sessions/:id/visibility', sessionController.getVisibility);
-router.post('/sessions/visibility', sessionController.setVisibility);
-router.put('/sessions/visibility', sessionController.updateVisibility);
-
-// Session listing
 router.get('/sessions/active', sessionController.getActiveSessions);
 router.get('/sessions/upcoming', sessionController.getUpcomingSessions);
 router.get('/sessions/past', sessionController.getPastSessions);
-
-// Session by id
 router.get('/sessions/:id', sessionController.getSessionById);
-router.put('/sessions/:id', sessionController.updateSession);
-router.delete('/sessions/:id', sessionController.deleteSessionById);
 
-// Session participants
-router.get('/sessions/:id/participants', sessionController.getSessionParticipants);
-router.post('/sessions/:id/participants', sessionController.addUserToSession);
-router.delete('/sessions/:id/participants/:userId', sessionController.removeUserFromSession);
-
-// Session state
-router.post('/sessions/:id/complete', sessionController.markComplete);
+// Protected
+router.post('/sessions', authMiddleware, sessionController.createSession);
+router.post('/sessions/visibility', authMiddleware, sessionController.setVisibility);
+router.put('/sessions/visibility', authMiddleware, sessionController.updateVisibility)
+router.put('/sessions/:id', authMiddleware, sessionController.updateSession);
+router.delete('/sessions/:id', authMiddleware, sessionController.deleteSessionById);
+router.get('/sessions/:id/participants', authMiddleware, sessionController.getSessionParticipants);
+router.post('/sessions/:id/participants', authMiddleware, sessionController.addUserToSession);
+router.delete('/sessions/:id/participants/:userId', authMiddleware, sessionController.removeUserFromSession);
+router.post('/sessions/:id/complete', authMiddleware, sessionController.markComplete);
 
 
 module.exports = router;

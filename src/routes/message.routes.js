@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const messageController = require('../controllers/message.controller');
+const authMiddleware = require('../middleware/authMiddleware');
 
 // Swagger Docs
 /**
@@ -135,7 +136,7 @@ const messageController = require('../controllers/message.controller');
  */
 
 // Routes
-router.get('/sessions/:id/messages', messageController.getSessionMessages);
-router.post('/sessions/:id/messages', messageController.sendSessionMessage);
+router.get('/sessions/:id/messages', authMiddleware, messageController.getSessionMessages);
+router.post('/sessions/:id/messages', authMiddleware, messageController.sendSessionMessage);
 
 module.exports = router;
