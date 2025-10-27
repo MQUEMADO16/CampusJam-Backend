@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const User = require('../models/user.model'); // assumes you have a User schema
+const User = require('../models/user.model');
 require('dotenv').config();
 
 // Helper: generate JWT

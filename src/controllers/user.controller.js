@@ -27,7 +27,15 @@ exports.getAllUsers = async (req, res) => {
  */
 exports.createUser = async (req, res) => {
   try {
-    const { name, email, password, dateOfBirth } = req.body;
+    // Destructure the top-level fields
+    const {
+      name,
+      email,
+      password,
+      dateOfBirth,
+      profile,
+      subscription,
+    } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -35,29 +43,55 @@ exports.createUser = async (req, res) => {
       return res.status(400).json({ message: 'User already exists with this email.' });
     }
 
+    // Hash the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Create the new user with the correctly nested data
     const newUser = new User({
+      // Core Identity
       name,
       email,
       password: hashedPassword,
       dateOfBirth,
+
+      // Nested Subscription object
+      // Use the 'subscription' object from req.body, or default
+      subscription: {
+        tier: subscription?.tier || 'basic', 
+      },
+
+      // Nested Profile object
+      // Use the 'profile' object from req.body, or default
+      profile: {
+        instruments: profile?.instruments || [],
+        genres: profile?.genres || [],
+        skillLevel: profile?.skillLevel || 'Beginner',
+      },
     });
 
+    // Save the user
     await newUser.save();
 
     // Remove password hash from the response
     const userResponse = newUser.toObject();
     delete userResponse.password;
 
+    // Send the sanitized user object
     res.status(201).json({
       message: 'SUCCESS: User was created and saved to the database.',
-      user: newUser,
+      user: userResponse,
     });
   }
   catch (error) {
-    console.error('DATABASE CONNECTION ERROR:', error);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        message: 'FAIL: Validation error.',
+        error: error.message,
+      });
+    }
+
+    console.error('CREATE USER ERROR:', error);
     res.status(500).json({
       message: 'FAIL: An error occurred while trying to save the user.',
       error: error.message,
