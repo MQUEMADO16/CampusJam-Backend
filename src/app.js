@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const { connectDB } = require('./config/database');
+const cors = require('cors');
 
 dotenv.config();
 connectDB();
@@ -11,7 +12,12 @@ connectDB();
 const app = express();
 app.use(express.json());
 
-// Swagger Configurations (Keep as is)
+const corsOptions = {
+  origin: 'http://localhost:3001', // Your frontend's URL
+};
+app.use(cors(corsOptions));
+
+// Swagger Configurations
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
@@ -29,16 +35,16 @@ const swaggerOptions = {
 const swaggerSpecs = swaggerJsDoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
-// Routes - Mount ALL routers directly
+// Routes
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const sessionRoutes = require('./routes/session.routes');
 const messageRoutes = require('./routes/message.routes');
 
-app.use('/api/auth', authRoutes); // Auth routes are inherently public
-app.use('/api', userRoutes);     // Apply middleware *inside* user.routes.js
-app.use('/api', sessionRoutes); // Apply middleware *inside* session.routes.js
-app.use('/api', messageRoutes); // Apply middleware *inside* message.routes.js
+app.use('/api', authRoutes);
+app.use('/api', userRoutes);
+app.use('/api', sessionRoutes);
+app.use('/api', messageRoutes);
 
 module.exports = app;
 
