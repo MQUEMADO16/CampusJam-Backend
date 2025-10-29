@@ -13,7 +13,7 @@ const app = express();
 app.use(express.json());
 
 const corsOptions = {
-  origin: 'http://localhost:3001', // Your frontend's URL
+  origin: 'http://localhost:3001',
 };
 app.use(cors(corsOptions));
 
