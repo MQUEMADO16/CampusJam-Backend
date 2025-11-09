@@ -432,3 +432,29 @@ exports.getPastSessions = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc Get all sessions for the logged-in user (hosted and joined)
+ * @route GET /api/sessions/my-sessions
+ */
+exports.getUserSessions = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Find sessions the user hosts
+    const hostedSessions = await Session.find({ host: userId })
+      .select('-chatMessages -__v')
+      .populate('host', 'name profile.skillLevel');
+
+    // Find sessions the user has joined (is an attendee)
+    const joinedSessions = await Session.find({ attendees: userId })
+      .select('-chatMessages -__v')
+      .populate('host', 'name profile.skillLevel');
+
+    res.status(200).json({ hostedSessions, joinedSessions });
+  } catch (error)
+ {
+    console.error('Error fetching user sessions:', error);
+    res.status(500).json({ message: 'Server error while fetching user sessions.' });
+  }
+};

@@ -316,6 +316,7 @@ router.get('/sessions/:id/participants', authMiddleware, sessionController.getSe
 router.post('/sessions/:id/participants', authMiddleware, sessionController.addUserToSession);
 router.delete('/sessions/:id/participants/:userId', authMiddleware, sessionController.removeUserFromSession);
 router.post('/sessions/:id/complete', authMiddleware, sessionController.markComplete);
+router.get('/sessions/my-sessions', authMiddleware, sessionController.getUserSessions);
 
 
 module.exports = router;
