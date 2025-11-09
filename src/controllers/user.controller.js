@@ -258,7 +258,7 @@ exports.addFriend = async (req, res) => {
   const { friendId } = req.body;
 
   if (!friendId) {
-    return res.status(400).json({ error: 'Missing friend ID.' });
+    return res.status(400).json({ message: 'Missing friend ID.' });
   }
 
   try {
@@ -266,25 +266,29 @@ exports.addFriend = async (req, res) => {
     const friend = await User.findById(friendId);
 
     if (!user || !friend) {
-      return res.status(404).json({ error: 'User or friend not found.' });
+      return res.status(404).json({ message: 'User or friend not found.' });
     }
 
-    if (user.friends.includes(friendId)) {
-      return res.status(409).json({ error: 'Users are already friends.' });
+    if (user.connections.following.includes(friendId)) {
+      return res.status(409).json({ message: 'You are already following this user.' });
     }
 
-    user.friends.push(friendId);
-    friend.friends.push(userId);
+    user.connections.following.push(friendId);
+    friend.connections.followers.push(userId);
 
     await user.save();
     await friend.save();
+    
+    const userResponse = user.toObject();
+    delete userResponse.password;
 
-    res.status(200).json({ message: 'Friend added successfully.', user });
+    res.status(200).json({ message: 'Friend added successfully.', user: userResponse });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to add friend.' });
+    res.status(500).json({ message: 'Failed to add friend.' });
   }
 };
+
 // Update password with old password check
 exports.updatePassword = async (req, res) => {
 const { id } = req.params;
@@ -373,7 +377,7 @@ exports.removeFriend = async (req, res) => {
   const { friendId } = req.body;
 
   if (!friendId) {
-    return res.status(400).json({ error: 'Missing friendId.' });
+    return res.status(400).json({ message: 'Missing friend ID.' });
   }
 
   try {
@@ -381,26 +385,22 @@ exports.removeFriend = async (req, res) => {
     const friend = await User.findById(friendId);
 
     if (!user || !friend) {
-      return res.status(404).json({ error: 'User or friend not found.' });
+      return res.status(404).json({ message: 'User or friend not found.' });
     }
 
-    // Check if they are friends
-    if (!user.friends.includes(friendId)) {
-      return res.status(400).json({ error: 'Users are not friends.' });
-    }
-
-    // Remove friendId from user's friends list
-    user.friends = user.friends.filter(f => f.toString() !== friendId);
-    // Remove userId from friend's friends list
-    friend.friends = friend.friends.filter(f => f.toString() !== userId);
+    user.connections.following.pull(friendId);
+    friend.connections.followers.pull(userId);
 
     await user.save();
     await friend.save();
 
-    res.status(200).json({ message: 'Friend removed successfully.', user });
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    res.status(200).json({ message: 'Friend removed successfully.', user: userResponse });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to remove friend.' });
+    res.status(500).json({ message: 'Failed to remove friend.' });
   }
 };
 
