@@ -298,25 +298,27 @@ const authMiddleware = require('../middleware/auth.middleware');
 
 // Routes
 
-// Public
+// --- Base and Specific Routes ---
 router.get('/sessions', sessionController.getAllSessions);
-router.get('/sessions/:id/visibility', sessionController.getVisibility);
 router.get('/sessions/active', sessionController.getActiveSessions);
 router.get('/sessions/upcoming', sessionController.getUpcomingSessions);
 router.get('/sessions/past', sessionController.getPastSessions);
-router.get('/sessions/:id', sessionController.getSessionById);
-
-// Protected
+router.get('/sessions/my-sessions', authMiddleware, sessionController.getUserSessions); // This MUST be defined before '/sessions/:id'
 router.post('/sessions', authMiddleware, sessionController.createSession);
 router.post('/sessions/visibility', authMiddleware, sessionController.setVisibility);
-router.put('/sessions/visibility', authMiddleware, sessionController.updateVisibility)
+router.put('/sessions/visibility', authMiddleware, sessionController.updateVisibility);
+
+// --- Dynamic /:id Routes ---
+router.get('/sessions/:id', sessionController.getSessionById);
+router.get('/sessions/:id/visibility', sessionController.getVisibility);
 router.put('/sessions/:id', authMiddleware, sessionController.updateSession);
 router.delete('/sessions/:id', authMiddleware, sessionController.deleteSessionById);
+router.post('/sessions/:id/complete', authMiddleware, sessionController.markComplete);
+
+// --- Dynamic /:id/participants Routes ---
 router.get('/sessions/:id/participants', authMiddleware, sessionController.getSessionParticipants);
 router.post('/sessions/:id/participants', authMiddleware, sessionController.addUserToSession);
 router.delete('/sessions/:id/participants/:userId', authMiddleware, sessionController.removeUserFromSession);
-router.post('/sessions/:id/complete', authMiddleware, sessionController.markComplete);
-router.get('/sessions/my-sessions', authMiddleware, sessionController.getUserSessions);
 
 
 module.exports = router;
