@@ -409,7 +409,7 @@ exports.getFriends = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const user = await User.findById(id).populate('friends', 'name email');
+    const user = await User.findById(id).populate('connections.following', 'name email');
     if (!user) return res.status(404).json({ error: 'User not found.' });
 
     res.status(200).json({ friends: user.friends });
