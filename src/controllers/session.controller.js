@@ -28,13 +28,10 @@ exports.getAllSessions = async (req, res) => {
  */
 exports.createSession = async (req, res) => {
   try {
-    // Verify user host exists
-    /* TODO: this is commented out so we can test insertion
     const hostExists = await User.findById(req.body.host);
     if (!hostExists) {
         return res.status(404).json({ message: 'Host user not found.' });
     }
-    */
 
     const newSession = new Session(req.body);
     await newSession.save();
