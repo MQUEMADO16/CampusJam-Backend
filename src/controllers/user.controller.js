@@ -409,13 +409,19 @@ exports.getFriends = async (req, res) => {
   const { id } = req.params;
 
   try {
+    // Populate the correct field: 'connections.following'
     const user = await User.findById(id).populate('connections.following', 'name email');
-    if (!user) return res.status(404).json({ error: 'User not found.' });
 
-    res.status(200).json({ friends: user.friends });
+    if (!user) return res.status(404).json({ message: 'User not found.' });
+
+    // Ensure we always return an array, even if 'following' is null/undefined
+    const friendsList = user.connections.following || [];
+
+    res.status(200).json({ friends: friendsList });
+
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to fetch friends.' });
+    res.status(500).json({ message: 'Failed to fetch friends.' });
   }
 };
 
