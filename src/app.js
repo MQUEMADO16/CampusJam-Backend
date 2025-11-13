@@ -6,6 +6,7 @@ const swaggerUi = require('swagger-ui-express');
 const { connectDB } = require('./config/database');
 const cors = require('cors');
 
+
 dotenv.config();
 connectDB();
 
@@ -40,11 +41,13 @@ const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const sessionRoutes = require('./routes/session.routes');
 const messageRoutes = require('./routes/message.routes');
+const calendarRoutes = require('./routes/calendar.routes');
 
 app.use('/api', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api', sessionRoutes);
 app.use('/api', messageRoutes);
+app.use('/api/calendar', calendarRoutes);
 
 module.exports = app;
 
