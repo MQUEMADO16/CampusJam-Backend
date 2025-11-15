@@ -90,9 +90,10 @@ const userSchema = new Schema({
   // TODO: this might need tweaked when we do the integrations
   integrations: {
     googleId: String,
-    spotify: {
-      id: String,
-      topGenres: [String],
+
+    googleRefreshToken: {
+      type: String,
+      select: false // Hides this field from normal queries for security
     }
   }
 }, {

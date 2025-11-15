@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/auth.controller');
-
+const authMiddleware = require('../middleware/auth.middleware');
 // Swagger Docs
 /**
  * @openapi
@@ -39,4 +39,14 @@ const authController = require('../controllers/auth.controller');
 
 router.post('/auth/login', authController.login);
 
+router.get(
+  '/auth/google-url',
+  authMiddleware, 
+  authController.getGoogleAuthUrl 
+);
+
+router.get(
+  '/auth/google/callback', 
+  authController.googleCallback
+);
 module.exports = router;

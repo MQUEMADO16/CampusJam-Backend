@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const Session = require('../models/session.model');
 const User = require('../models/user.model');
+const { google } = require('googleapis');
+const { oauth2Client } = require('../config/google');
 
 // TODO: implement all endpoint logic
 
@@ -28,14 +30,35 @@ exports.getAllSessions = async (req, res) => {
  */
 exports.createSession = async (req, res) => {
   try {
-    const hostExists = await User.findById(req.body.host);
-    if (!hostExists) {
-        return res.status(404).json({ message: 'Host user not found.' });
-    }
+    // 1. Get the host's ID securely from your auth middleware
+    const hostId = req.user.id; 
 
-    const newSession = new Session(req.body);
+    // 2. Create the session object
+    const newSession = new Session({
+      ...req.body, // Spread the form data (title, description, startTime, etc.)
+      host: hostId  // Explicitly set the host to the logged-in user
+    });
+
+    // 3. Save the new session
     await newSession.save();
 
+    // 4. Try to add it to Google Calendar
+    try {
+const user = await User.findById(hostId)
+  .select('+integrations.googleRefreshToken');
+
+if (user && user.integrations?.googleRefreshToken) {
+  console.log('User has Google token. Attempting to create calendar event...');
+  createCalendarEvent(user.integrations.googleRefreshToken, newSession);
+} else {
+  console.log('User does not have Google token. Skipping calendar sync.');
+}
+
+    } catch (calendarError) {
+      console.error('Error during calendar sync check:', calendarError);
+    }
+
+    // 5. Send the successful response
     res.status(201).json({
       message: 'Session created successfully!',
       session: newSession,
@@ -455,3 +478,49 @@ exports.getUserSessions = async (req, res) => {
     res.status(500).json({ message: 'Server error while fetching user sessions.' });
   }
 };
+
+/**
+ * Creates a new Google Calendar event.
+ * @param {string} refreshToken - The user's Google refresh token.
+ * @param {object} session - The session object from your database.
+ */
+async function createCalendarEvent(refreshToken, session) {
+  try {
+    // 1. Set the refresh token on the OAuth2 client
+    oauth2Client.setCredentials({
+      refresh_token: refreshToken,
+    });
+
+    // 2. Get a new access token
+    const { token: accessToken } = await oauth2Client.getAccessToken();
+
+    // 3. Initialize the Google Calendar API
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+
+    // 4. Define the calendar event resource
+    const event = {
+      summary: session.title,
+      description: session.description,
+      start: {
+        dateTime: session.startTime, // Uses the date from the form
+        timeZone: 'America/New_York', // You can make this dynamic later
+      },
+      end: {
+        dateTime: session.endTime, // Uses the date from the form
+        timeZone: 'America/New_York',
+      },
+    };
+
+    // 5. Insert the event
+    const response = await calendar.events.insert({
+      calendarId: 'primary', // 'primary' means the user's main calendar
+      resource: event,
+    });
+
+    console.log('Google Calendar event created:', response.data.htmlLink);
+
+  } catch (error) {
+    // We log the error but don't stop the main 'createSession' from working
+    console.error('Failed to create Google Calendar event:', error.message);
+  }
+}
