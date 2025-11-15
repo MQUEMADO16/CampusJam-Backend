@@ -11,4 +11,13 @@ router.get(
   calendarController.getCalendarEvents
 );
 
+// --- ADD THIS BLOCK ---
+// POST /api/calendar/add-session/:sessionId
+router.post(
+  '/add-session/:sessionId',
+  authMiddleware,
+  calendarController.addSessionToCalendar
+);
+// --- END OF BLOCK ---
+
 module.exports = router;
