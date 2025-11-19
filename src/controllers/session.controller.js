@@ -35,26 +35,9 @@ exports.createSession = async (req, res) => {
         return res.status(404).json({ message: 'Host user not found.' });
     }
 
-    // 3. Save the new session
+    const newSession = new Session(req.body);
     await newSession.save();
 
-    // 4. Try to add it to Google Calendar
-    try {
-const user = await User.findById(hostId)
-  .select('+integrations.googleRefreshToken');
-
-if (user && user.integrations?.googleRefreshToken) {
-  console.log('User has Google token. Attempting to create calendar event...');
-  createCalendarEvent(user.integrations.googleRefreshToken, newSession);
-} else {
-  console.log('User does not have Google token. Skipping calendar sync.');
-}
-
-    } catch (calendarError) {
-      console.error('Error during calendar sync check:', calendarError);
-    }
-
-    // 5. Send the successful response
     res.status(201).json({
       message: 'Session created successfully!',
       session: newSession,
