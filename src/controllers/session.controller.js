@@ -61,7 +61,7 @@ exports.getSessionById = async (req, res) => {
     const session = await Session.findById(sessionId)
       .select('-chatMessages -__v')
       .populate('host', '-password -__v') // Populate host, exclude sensitive fields
-      .populate('attendees.user', '-password -__v');
+      .populate('attendees', '-password -__v');
 
     if (!session) {
       return res.status(404).json({ message: 'Session not found.' });
@@ -138,7 +138,7 @@ exports.getSessionParticipants = async (req, res) => {
     const session = await Session.findById(sessionId)
       .select('attendees')
       .populate({
-        path: 'attendees.user',
+        path: 'attendees',
         select: '-password -__v'
       });
 

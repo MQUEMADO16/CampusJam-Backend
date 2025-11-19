@@ -6,6 +6,11 @@ const swaggerUi = require('swagger-ui-express');
 const { connectDB } = require('./config/database');
 const cors = require('cors');
 
+require('./models/message.model.js');
+require('./models/report.model.js');
+require('./models/session.model.js');
+require('./models/user.model.js');
+
 dotenv.config();
 connectDB();
 
