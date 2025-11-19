@@ -30,14 +30,10 @@ exports.getAllSessions = async (req, res) => {
  */
 exports.createSession = async (req, res) => {
   try {
-    // 1. Get the host's ID securely from your auth middleware
-    const hostId = req.user.id; 
-
-    // 2. Create the session object
-    const newSession = new Session({
-      ...req.body, // Spread the form data (title, description, startTime, etc.)
-      host: hostId  // Explicitly set the host to the logged-in user
-    });
+    const hostExists = await User.findById(req.body.host);
+    if (!hostExists) {
+        return res.status(404).json({ message: 'Host user not found.' });
+    }
 
     // 3. Save the new session
     await newSession.save();
