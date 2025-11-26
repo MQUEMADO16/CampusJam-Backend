@@ -10,6 +10,7 @@ require('./models/message.model.js');
 require('./models/report.model.js');
 require('./models/session.model.js');
 require('./models/user.model.js');
+require('./models/notification.model.js');
 
 dotenv.config();
 connectDB();
@@ -46,12 +47,13 @@ const userRoutes = require('./routes/user.routes');
 const sessionRoutes = require('./routes/session.routes');
 const messageRoutes = require('./routes/message.routes');
 const calendarRoutes = require('./routes/calendar.routes');
+const notificationRoutes = require('./routes/notification.routes');
 
 app.use('/api', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api', sessionRoutes);
 app.use('/api', messageRoutes);
 app.use('/api/calendar', calendarRoutes);
-
+app.use('/api/notifications', notificationRoutes);
 module.exports = app;
 
