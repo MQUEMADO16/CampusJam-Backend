@@ -30,6 +30,7 @@ const authMiddleware = require('../middleware/auth.middleware');
  *         startTime: { type: string, format: date-time }
  *         endTime: { type: string, format: date-time, nullable: true }
  *         location: { type: string, nullable: true }
+ *         address: { type: string, nullable: true }
  *         genre: { type: string, nullable: true }
  *         skillLevel:
  *           type: string

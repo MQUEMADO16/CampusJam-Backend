@@ -43,6 +43,10 @@ const jamSessionSchema = new Schema({
     type: String,
     trim: true,
   },
+  address: {
+    type: String,
+    trim: true,
+  },
   genre: {
     type: String,
     trim: true,
