@@ -136,7 +136,20 @@ const authMiddleware = require('../middleware/auth.middleware');
  */
 
 // Routes
-router.get('/sessions/:id/messages', authMiddleware, messageController.getSessionMessages);
-router.post('/sessions/:id/messages', authMiddleware, messageController.sendSessionMessage);
+
+// GET /api/messages/conversations - Get list of active conversations (Inbox)
+router.get('/conversations', protect, messageController.getConversations);
+
+// GET /api/messages/dm/:userId - Get conversation history with a specific user
+router.get('/dm/:userId', protect, messageController.getDirectMessages);
+
+// POST /api/messages/dm - Send a message to a user
+router.post('/dm', protect, messageController.sendDirectMessage);
+
+// GET /api/messages/session/:sessionId - Get messages for a session
+router.get('/session/:sessionId', protect, messageController.getSessionMessages);
+
+// POST /api/messages/session/:sessionId - Send a message to a session
+router.post('/session/:sessionId', protect, messageController.sendSessionMessage);
 
 module.exports = router;

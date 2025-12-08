@@ -6,6 +6,81 @@ const JamSession = require('../models/session.model');
 // Direct Messaging Controllers (User to User)
 
 /**
+ * @desc   Get list of active conversations (inbox)
+ * @route  GET /api/messages/conversations
+ * @access Protected
+ */
+exports.getConversations = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+
+    const conversations = await DirectMessage.aggregate([
+      {
+        $match: {
+          $or: [{ sender: currentUserId }, { recipient: currentUserId }],
+        },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $group: {
+          _id: {
+            $cond: [
+              { $eq: ['$sender', currentUserId] },
+              '$recipient',
+              '$sender',
+            ],
+          },
+          lastMessage: { $first: '$$ROOT' }, // Keep the full last message document
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'otherUser',
+        },
+      },
+      {
+        $unwind: '$otherUser',
+      },
+      {
+        $project: {
+          _id: 0,
+          otherUser: {
+            _id: '$otherUser._id',
+            name: '$otherUser.name',
+            email: '$otherUser.email',
+          },
+          lastMessage: {
+            content: '$lastMessage.content',
+            createdAt: '$lastMessage.createdAt',
+            read: '$lastMessage.read',
+            sender: '$lastMessage.sender',
+          },
+        },
+      },
+      {
+        $sort: { 'lastMessage.createdAt': -1 },
+      },
+    ]);
+
+    res.status(200).json({
+      message: 'SUCCESS: Conversations retrieved.',
+      conversations: conversations,
+    });
+  } catch (error) {
+    console.error('Error fetching conversations:', error);
+    res.status(500).json({
+      message: 'Server error while fetching conversations.',
+      error: error.message,
+    });
+  }
+};
+
+/**
  * @desc   Get chat history between the current user and another user
  * @route  GET /api/messages/dm/:userId
  * @access Protected
