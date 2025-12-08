@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 /**
  * @desc   Defines schema for chat messages within Jam Sessions
  */
-const messageSchema = new Schema({
+const sessionMessageSchema = new Schema({
   session: {
     type: Schema.Types.ObjectId,
     ref: 'JamSession',
@@ -25,5 +25,5 @@ const messageSchema = new Schema({
   timestamps: true,
 });
 
-const Message = mongoose.model('Message', messageSchema, 'messages');
-module.exports = Message;
+const SessionMessage = mongoose.model('Message', sessionMessageSchema, 'messages');
+module.exports = SessionMessage;
