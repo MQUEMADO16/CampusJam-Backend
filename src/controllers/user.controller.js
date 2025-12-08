@@ -567,25 +567,64 @@ exports.reportUser = async (req,res) => {
 exports.searchUser = async (req,res) => {
 
   try {
-    const { name } = req.query;
+    const 
+    { 
+      name,
+      genres,
+      instruments,
+      skillLevel,
+      campus
+    } = req.query;
 
     if (!name) {
-      return res.status(400).json({ error: 'Please enter a username' });
+      return res.status(400).json({ 
+        error: 'Name is required for user search. Please enter a name to search for users.' 
+      });
     }
 
-    // Build dynamic search filter
-    const filter = { name: new RegExp(name, 'i') }; // case-insensitive name search
+    const filter = { name: new RegExp(name, 'i') };
 
-    const users = await User.find(filter).select('-password'); // exclude password field
+    if (campus) filter.campus = campus; // Exact match for campus
+    if (skillLevel) filter['profile.skillLevel'] = skillLevel;
+    if (instrument) filter['profile.instruments'] = instruments;
+    if (genre) filter['profile.genres'] = genres;
+
+    const users = await User.find(filter)
+      .select('-password -__v -integrations.googleRefreshToken')
+      .sort({ name: 1 });
+
+    // Build filter description
+    const filtersApplied = [];
+    if (campus) filtersApplied.push(`at ${campus} campus`);
+    if (skillLevel) filtersApplied.push(`with ${skillLevel} skill level`);
+    if (instruments) filtersApplied.push(`who play ${instruments}`);
+    if (genres) filtersApplied.push(`interested in ${genres}`);
 
     if (users.length === 0) {
-      return res.status(404).json({ message: 'No matching user' });
+      const message = filtersApplied.length > 0
+        ? `No users named "${name}" found ${filtersApplied.join(' and ')}`
+        : `No users found with name containing "${name}"`;
+      
+      return res.status(200).json({ 
+        message,
+        searchQuery: name,
+        filtersApplied: filtersApplied.length > 0 ? filtersApplied : null,
+        users: [] 
+      });
     }
 
-    res.status(200).json(users);
+    res.status(200).json({
+      searchQuery: name,
+      filtersApplied: filtersApplied.length > 0 ? filtersApplied : null,
+      count: users.length,
+      users
+    });
+
   } catch (error) {
     console.error('Error searching users:', error);
-    res.status(500).json({ error: 'Failed to search users', details: error.message });
+    res.status(500).json({ 
+      error: 'Failed to search users', 
+      details: error.message 
+    });
   }
 };
-
