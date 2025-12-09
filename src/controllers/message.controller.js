@@ -97,6 +97,49 @@ exports.getConversations = async (req, res) => {
 };
 
 /**
+ * @desc   Get chat history between the current user and another user
+ * @route  GET /api/messages/dm/:userId
+ * @access Protected
+ */
+exports.getDirectMessages = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized: User info missing.' });
+    }
+
+    const currentUserId = req.user._id || req.user.id;
+    const otherUserId = req.params.userId;
+
+    if (!otherUserId) {
+      return res.status(400).json({
+        message: 'FAIL: User ID is required to fetch conversation.',
+      });
+    }
+
+    const messages = await DirectMessage.find({
+      $or: [
+        { sender: currentUserId, recipient: otherUserId },
+        { sender: otherUserId, recipient: currentUserId },
+      ],
+    })
+      .sort({ createdAt: 1 })
+      .populate('sender', 'name email profile.avatar')
+      .populate('recipient', 'name email profile.avatar');
+
+    res.status(200).json({
+      message: 'SUCCESS: Conversation retrieved.',
+      messages: messages,
+    });
+  } catch (error) {
+    console.error('Error fetching conversation:', error);
+    res.status(500).json({
+      message: 'Server error while fetching conversation.',
+      error: error.message,
+    });
+  }
+};
+
+/**
  * @desc   Send a direct message to another user
  * @route  POST /api/messages/dm
  * @body   { recipientId, content }
@@ -177,69 +220,6 @@ exports.sendDirectMessage = async (req, res) => {
       data: populated,
     });
 
-  } catch (error) {
-    console.error('Error sending message:', error);
-    res.status(500).json({
-      message: 'Server error while sending message.',
-      error: error.message,
-    });
-  }
-};
-
-/**
- * @desc   Send a direct message to another user
- * @route  POST /api/messages/dm
- * @body   { recipientId, content }
- * @access Protected
- */
-exports.sendDirectMessage = async (req, res) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Unauthorized: User info missing.' });
-    }
-
-    const senderId = req.user._id || req.user.id;
-    
-    if (!senderId) {
-       console.error('Auth Error: Sender ID missing in req.user', req.user);
-       return res.status(401).json({ message: 'Unauthorized: Sender ID missing.' }); 
-    }
-
-    const { recipientId, content } = req.body;
-
-    if (!recipientId || !content) {
-      return res.status(400).json({
-        message: 'FAIL: Recipient ID and content are required.',
-      });
-    }
-
-    if (senderId.toString() === recipientId) {
-      return res.status(400).json({
-        message: 'FAIL: You cannot send a message to yourself.',
-      });
-    }
-
-    const recipientExists = await User.exists({ _id: recipientId });
-    if (!recipientExists) {
-      return res.status(404).json({
-        message: 'FAIL: Recipient user not found.',
-      });
-    }
-
-    const newMessage = new DirectMessage({
-      sender: senderId,
-      recipient: recipientId,
-      content,
-    });
-
-    await newMessage.save();
-
-    const populatedMessage = await newMessage.populate('sender', 'name email profile.avatar');
-
-    res.status(201).json({
-      message: 'SUCCESS: Message sent successfully.',
-      data: populatedMessage,
-    });
   } catch (error) {
     console.error('Error sending message:', error);
     res.status(500).json({
