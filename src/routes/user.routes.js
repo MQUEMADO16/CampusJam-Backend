@@ -614,9 +614,9 @@ const authMiddleware = require('../middleware/auth.middleware');
 
 // Public
 router.get('/users', userController.getAllUsers);
-router.get('/users/:id', userController.getUserById);
+router.get('/users/search', userController.searchUser); // <-- MOVED UP (Specific)
+router.get('/users/:id', userController.getUserById);   // <-- MOVED DOWN (Dynamic)
 router.post('/users', userController.createUser);
-router.get('/users/search', userController.searchUser);
 
 // Protected
 router.put('/users/:id', authMiddleware, userController.updateUser);
@@ -632,13 +632,10 @@ router.get('/users/:id/blocked', authMiddleware, userController.getBlockedUsers)
 
 router.post('/users/:id/sessions', authMiddleware, userController.addSessionToUser);
 router.delete('/users/:id/sessions/:sessionId', authMiddleware, userController.removeSessionFromUser);
-router.get('/users/:id/subscription', authMiddleware, userController.getSubscription);
-router.put('/users/:id/subscription', authMiddleware, userController.updateSubscription);
 
 router.get('/users/:id/subscription', authMiddleware, userController.getSubscription);
 router.put('/users/:id/subscription', authMiddleware, userController.updateSubscription);
 
 router.get('/users/:id/activity', authMiddleware, userController.getUserActivity);
 router.post('/users/:id/report', authMiddleware, userController.reportUser);
-
 module.exports = router;

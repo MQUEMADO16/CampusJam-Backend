@@ -23,6 +23,11 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+app.use((req, res, next) => {
+  req.io = req.app.get('io');
+  next();
+});
+
 // Swagger Configurations
 const swaggerOptions = {
   definition: {
