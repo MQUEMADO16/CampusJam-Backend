@@ -20,7 +20,7 @@ io.on('connection', (socket) => {
     const roomName = String(userId); 
     
     socket.join(roomName);
-    console.log(`Socket: User with Socket ID ${socket.id} joined room: ${roomName}`);
+    console.log(`[SUCCESS] Socket: User with Socket ID ${socket.id} joined room: ${roomName}`);
   });
 
   socket.on('disconnect', () => {
