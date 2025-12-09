@@ -152,48 +152,43 @@ exports.sendDirectMessage = async (req, res) => {
     }
 
     const senderId = req.user._id || req.user.id;
-
     if (!senderId) {
       console.error('Auth Error: Sender ID missing in req.user', req.user);
       return res.status(401).json({ message: 'Unauthorized: Sender ID missing.' });
     }
 
     const { recipientId, content } = req.body;
-
     if (!recipientId || !content) {
-      return res.status(400).json({
-        message: 'FAIL: Recipient ID and content are required.',
-      });
+      return res.status(400).json({ message: 'FAIL: Recipient ID and content are required.' });
     }
 
-    if (senderId.toString() === recipientId) {
-      return res.status(400).json({
-        message: 'FAIL: You cannot send a message to yourself.',
-      });
+    if (senderId.toString() === recipientId.toString()) {
+      return res.status(400).json({ message: 'FAIL: You cannot send a message to yourself.' });
     }
 
     const recipientExists = await User.exists({ _id: recipientId });
     if (!recipientExists) {
-      return res.status(404).json({
-        message: 'FAIL: Recipient user not found.',
-      });
+      return res.status(404).json({ message: 'FAIL: Recipient user not found.' });
     }
 
-    // Save the message
+    // Create and save the message
     const newMessage = new DirectMessage({
       sender: senderId,
       recipient: recipientId,
       content,
     });
 
-    await newMessage.save();
-    const populated = await newMessage
+    const saved = await newMessage.save();
+
+    const populated = await DirectMessage.findById(saved._id)
       .populate('sender', 'name email profile.avatar')
-      .populate('recipient', 'name email');
+      .populate('recipient', 'name email profile.avatar')
+      .lean()
+      .exec();
 
     const io = req.io;
     if (io) {
-      io.to(recipientId.toString()).emit("receive_message", {
+      const payload = {
         _id: populated._id,
         content: populated.content,
         createdAt: populated.createdAt,
@@ -208,18 +203,20 @@ exports.sendDirectMessage = async (req, res) => {
           _id: populated.recipient._id,
           name: populated.recipient.name,
           email: populated.recipient.email,
-        }
-      });
-    } else {
-      console.warn("Socket IO not available on req.io");
-    }
+        },
+      };
 
-    // Send standard API response
+      io.to(recipientId.toString()).emit('receive_message', payload);
+
+      io.to(senderId.toString()).emit('message_sent', payload);
+    } else {
+      console.warn('Socket IO not available on req.io — skipping emit.');
+    }
+    
     res.status(201).json({
       message: 'SUCCESS: Message sent successfully.',
       data: populated,
     });
-
   } catch (error) {
     console.error('Error sending message:', error);
     res.status(500).json({
