@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const DirectMessage = require('../models/directMessage.model');
 const SessionMessage = require('../models/sessionMessage.model');
 const User = require('../models/user.model');
@@ -12,18 +13,29 @@ const JamSession = require('../models/session.model');
  */
 exports.getConversations = async (req, res) => {
   try {
-    const currentUserId = req.user._id;
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized.' });
+    }
+    
+    // NOTE: Must explicitly cast to ObjectId for aggregation
+    // Aggregation pipelines do NOT auto-cast strings to ObjectIds.
+    // If we don't do this, the $match and $cond logic will fail silently.
+    const userIdString = req.user._id || req.user.id;
+    const currentUserId = new mongoose.Types.ObjectId(userIdString);
 
     const conversations = await DirectMessage.aggregate([
       {
+        // Find all messages where I am sender OR recipient
         $match: {
           $or: [{ sender: currentUserId }, { recipient: currentUserId }],
         },
       },
       {
+        // Sort by newest first
         $sort: { createdAt: -1 },
       },
       {
+        // Group by the "other" user
         $group: {
           _id: {
             $cond: [
@@ -32,21 +44,24 @@ exports.getConversations = async (req, res) => {
               '$sender',
             ],
           },
-          lastMessage: { $first: '$$ROOT' }, // Keep the full last message document
+          lastMessage: { $first: '$$ROOT' }, 
         },
       },
       {
+        // Join with User collection
         $lookup: {
-          from: 'users',
+          from: 'users', 
           localField: '_id',
           foreignField: '_id',
           as: 'otherUser',
         },
       },
       {
+        // Unwind to get the object instead of array
         $unwind: '$otherUser',
       },
       {
+        // Shape the output
         $project: {
           _id: 0,
           otherUser: {
@@ -63,6 +78,7 @@ exports.getConversations = async (req, res) => {
         },
       },
       {
+        // Final sort
         $sort: { 'lastMessage.createdAt': -1 },
       },
     ]);
@@ -87,7 +103,11 @@ exports.getConversations = async (req, res) => {
  */
 exports.getDirectMessages = async (req, res) => {
   try {
-    const currentUserId = req.user._id;
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized: User info missing.' });
+    }
+
+    const currentUserId = req.user._id || req.user.id;
     const otherUserId = req.params.userId;
 
     if (!otherUserId) {
@@ -127,7 +147,17 @@ exports.getDirectMessages = async (req, res) => {
  */
 exports.sendDirectMessage = async (req, res) => {
   try {
-    const senderId = req.user._id;
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized: User info missing.' });
+    }
+
+    const senderId = req.user._id || req.user.id;
+    
+    if (!senderId) {
+       console.error('Auth Error: Sender ID missing in req.user', req.user);
+       return res.status(401).json({ message: 'Unauthorized: Sender ID missing.' }); 
+    }
+
     const { recipientId, content } = req.body;
 
     if (!recipientId || !content) {
