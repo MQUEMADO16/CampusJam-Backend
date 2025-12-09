@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('../models/user.model');
 const Session = require('../models/session.model');
+const Notification = require('../models/notification.model');
 
 /**
  * @desc  Fetch all users
@@ -278,7 +279,17 @@ exports.addFriend = async (req, res) => {
 
     await user.save();
     await friend.save();
-    
+    try {
+  await Notification.create({
+    recipient: friendId, // The person being followed gets the alert
+    sender: userId,      // The person following
+    type: 'follow',
+    message: `${user.name} started following you.`,
+    link: `/profile/${userId}` // Clicking takes them to the follower's profile
+  });
+} catch (err) {
+  console.error('Notification creation failed:', err);
+}    
     const userResponse = user.toObject();
     delete userResponse.password;
 
