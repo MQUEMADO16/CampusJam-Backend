@@ -564,16 +564,16 @@ exports.reportUser = async (req,res) => {
 };
 
 // GET users with matching usernames to given input
-exports.searchUser = async (req,res) => {
-
+exports.searchUser = async (req, res) => {
   try {
-    const 
-    { 
+    const { 
       name,
       genres,
       instruments,
       skillLevel,
-      campus
+      campus,
+      page = 1,
+      limit = 20 
     } = req.query;
 
     if (!name) {
@@ -582,23 +582,50 @@ exports.searchUser = async (req,res) => {
       });
     }
 
-    const filter = { name: new RegExp(name, 'i') };
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
 
-    if (campus) filter.campus = campus; // Exact match for campus
+    const filter = { 
+      name: new RegExp(name, 'i') 
+    };
+
+    if (campus) filter.campus = campus;
     if (skillLevel) filter['profile.skillLevel'] = skillLevel;
-    if (instrument) filter['profile.instruments'] = instruments;
-    if (genre) filter['profile.genres'] = genres;
+    
+    if (instruments) {
+      if (Array.isArray(instruments)) {
+        filter['profile.instruments'] = { $all: instruments };
+      } else {
+        filter['profile.instruments'] = instruments;
+      }
+    }
+    
+    if (genres) {
+      if (Array.isArray(genres)) {
+        filter['profile.genres'] = { $all: genres };
+      } else {
+        filter['profile.genres'] = genres;
+      }
+    }
+
+    const totalCount = await User.countDocuments(filter);
 
     const users = await User.find(filter)
       .select('-password -__v -integrations.googleRefreshToken')
-      .sort({ name: 1 });
+      .sort({ name: 1 })
+      .skip(skip)
+      .limit(limitNum);
 
-    // Build filter description
+    const totalPages = Math.ceil(totalCount / limitNum);
+    const hasNextPage = pageNum < totalPages;
+    const hasPrevPage = pageNum > 1;
+
     const filtersApplied = [];
     if (campus) filtersApplied.push(`at ${campus} campus`);
     if (skillLevel) filtersApplied.push(`with ${skillLevel} skill level`);
-    if (instruments) filtersApplied.push(`who play ${instruments}`);
-    if (genres) filtersApplied.push(`interested in ${genres}`);
+    if (instruments) filtersApplied.push(`who play ${Array.isArray(instruments) ? instruments.join(', ') : instruments}`);
+    if (genres) filtersApplied.push(`interested in ${Array.isArray(genres) ? genres.join(', ') : genres}`);
 
     if (users.length === 0) {
       const message = filtersApplied.length > 0
@@ -609,6 +636,14 @@ exports.searchUser = async (req,res) => {
         message,
         searchQuery: name,
         filtersApplied: filtersApplied.length > 0 ? filtersApplied : null,
+        pagination: {
+          totalCount: 0,
+          totalPages: 0,
+          currentPage: pageNum,
+          limit: limitNum,
+          hasNextPage: false,
+          hasPrevPage: false
+        },
         users: [] 
       });
     }
@@ -616,6 +651,14 @@ exports.searchUser = async (req,res) => {
     res.status(200).json({
       searchQuery: name,
       filtersApplied: filtersApplied.length > 0 ? filtersApplied : null,
+      pagination: {
+        totalCount,
+        totalPages,
+        currentPage: pageNum,
+        limit: limitNum,
+        hasNextPage,
+        hasPrevPage
+      },
       count: users.length,
       users
     });
