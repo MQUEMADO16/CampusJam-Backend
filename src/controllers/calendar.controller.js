@@ -7,47 +7,39 @@ const Session = require('../models/session.model');
  */
 exports.getCalendarEvents = async (req, res) => {
   try {
-    // 1. Get the user from the database
     const userId = req.user.id;
-  const user = await User.findById(userId)
-  .select('+integrations.googleRefreshToken');
+    
+    const user = await User.findById(userId)
+      .select('+integrations.googleRefreshToken');
 
-if (!user || !user.integrations?.googleRefreshToken) {
-  return res.status(400).json({ message: 'Google account not linked.' });
-}
+    if (!user || !user.integrations?.googleRefreshToken) {
+      return res.status(400).json({ message: 'Google account not linked.' });
+    }
 
-oauth2Client.setCredentials({
-  refresh_token: user.integrations.googleRefreshToken,
-});
-
-
-    // 3. Set the refresh token on the OAuth2 client
     oauth2Client.setCredentials({
-      refresh_token: user.googleRefreshToken,
+      refresh_token: user.integrations.googleRefreshToken,
     });
+    
+    await oauth2Client.getAccessToken();
 
-    // 4. Get a new access token
-    const { token: accessToken } = await oauth2Client.getAccessToken();
-
-    // 5. Initialize the Google Calendar API
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
-    // 6. Fetch events
     const response = await calendar.events.list({
       calendarId: 'primary',
-      timeMin: (new Date()).toISOString(), // From now...
-      maxResults: 50,                     // ...fetch the next 50 events
-      singleEvents: true,                 // Show recurring events as single instances
+      timeMin: (new Date()).toISOString(),
+      maxResults: 50,
+      singleEvents: true,
       orderBy: 'startTime',
     });
 
-    const events = response.data.items;
-    
-    // 7. Send the events back
-    res.status(200).json(events);
+    res.status(200).json(response.data.items);
 
   } catch (error) {
     console.error('Failed to fetch Google Calendar events:', error);
+    // Handle specific auth errors
+    if (error.code === 400 || error.code === 401 || error.message.includes('invalid_grant')) {
+       return res.status(401).json({ message: 'Google Calendar link expired. Please reconnect in settings.' });
+    }
     res.status(500).json({ message: 'Failed to fetch calendar events.' });
   }
 };
