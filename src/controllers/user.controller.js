@@ -575,28 +575,110 @@ exports.reportUser = async (req,res) => {
 };
 
 // GET users with matching usernames to given input
-exports.searchUser = async (req,res) => {
-
+exports.searchUser = async (req, res) => {
   try {
-    const { name } = req.query;
+    const { 
+      name,
+      genres,
+      instruments,
+      skillLevel,
+      campus,
+      page = 1,
+      limit = 20 
+    } = req.query;
 
     if (!name) {
-      return res.status(400).json({ error: 'Please enter a username' });
+      return res.status(400).json({ 
+        error: 'Name is required for user search. Please enter a name to search for users.' 
+      });
     }
 
-    // Build dynamic search filter
-    const filter = { name: new RegExp(name, 'i') }; // case-insensitive name search
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
 
-    const users = await User.find(filter).select('-password'); // exclude password field
+    const filter = { 
+      name: new RegExp(name, 'i') 
+    };
+
+    if (campus) filter.campus = campus;
+    if (skillLevel) filter['profile.skillLevel'] = skillLevel;
+    
+    if (instruments) {
+      if (Array.isArray(instruments)) {
+        filter['profile.instruments'] = { $all: instruments };
+      } else {
+        filter['profile.instruments'] = instruments;
+      }
+    }
+    
+    if (genres) {
+      if (Array.isArray(genres)) {
+        filter['profile.genres'] = { $all: genres };
+      } else {
+        filter['profile.genres'] = genres;
+      }
+    }
+
+    const totalCount = await User.countDocuments(filter);
+
+    const users = await User.find(filter)
+      .select('-password -__v -integrations.googleRefreshToken')
+      .sort({ name: 1 })
+      .skip(skip)
+      .limit(limitNum);
+
+    const totalPages = Math.ceil(totalCount / limitNum);
+    const hasNextPage = pageNum < totalPages;
+    const hasPrevPage = pageNum > 1;
+
+    const filtersApplied = [];
+    if (campus) filtersApplied.push(`at ${campus} campus`);
+    if (skillLevel) filtersApplied.push(`with ${skillLevel} skill level`);
+    if (instruments) filtersApplied.push(`who play ${Array.isArray(instruments) ? instruments.join(', ') : instruments}`);
+    if (genres) filtersApplied.push(`interested in ${Array.isArray(genres) ? genres.join(', ') : genres}`);
 
     if (users.length === 0) {
-      return res.status(404).json({ message: 'No matching user' });
+      const message = filtersApplied.length > 0
+        ? `No users named "${name}" found ${filtersApplied.join(' and ')}`
+        : `No users found with name containing "${name}"`;
+      
+      return res.status(200).json({ 
+        message,
+        searchQuery: name,
+        filtersApplied: filtersApplied.length > 0 ? filtersApplied : null,
+        pagination: {
+          totalCount: 0,
+          totalPages: 0,
+          currentPage: pageNum,
+          limit: limitNum,
+          hasNextPage: false,
+          hasPrevPage: false
+        },
+        users: [] 
+      });
     }
 
-    res.status(200).json(users);
+    res.status(200).json({
+      searchQuery: name,
+      filtersApplied: filtersApplied.length > 0 ? filtersApplied : null,
+      pagination: {
+        totalCount,
+        totalPages,
+        currentPage: pageNum,
+        limit: limitNum,
+        hasNextPage,
+        hasPrevPage
+      },
+      count: users.length,
+      users
+    });
+
   } catch (error) {
     console.error('Error searching users:', error);
-    res.status(500).json({ error: 'Failed to search users', details: error.message });
+    res.status(500).json({ 
+      error: 'Failed to search users', 
+      details: error.message 
+    });
   }
 };
-
