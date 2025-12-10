@@ -147,7 +147,7 @@ router.get('/messages/dm/:userId', authMiddleware, messageController.getDirectMe
 router.post('/messages/dm', authMiddleware, messageController.sendDirectMessage);
 
 // PUT /api/messages/dm/:senderId/read - Mark messages from a specific sender as read
-router.put('/dm/:senderId/read', protect, messageController.markAsRead);
+router.put('/dm/:senderId/read', authMiddleware, messageController.markAsRead);
 
 // GET /api/messages/session/:sessionId - Get messages for a session
 router.get('/messages/session/:sessionId', authMiddleware, messageController.getSessionMessages);
