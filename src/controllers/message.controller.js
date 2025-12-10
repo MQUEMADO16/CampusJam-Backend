@@ -137,6 +137,39 @@ exports.sendDirectMessage = async (req, res) => {
   }
 };
 
+/**
+ * @desc   Mark all messages from a specific sender as read
+ * @route  PUT /api/messages/dm/:senderId/read
+ * @access Protected
+ */
+exports.markAsRead = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized.' });
+    }
+
+    const currentUserId = req.user._id || req.user.id;
+    const senderId = req.params.senderId;
+
+    if (!senderId) {
+      return res.status(400).json({ message: 'Sender ID is required.' });
+    }
+
+    await DirectMessage.updateMany(
+      { sender: senderId, recipient: currentUserId, read: false },
+      { $set: { read: true } }
+    );
+
+    res.status(200).json({ message: 'SUCCESS: Messages marked as read.' });
+  } catch (error) {
+    console.error('Error marking messages as read:', error);
+    res.status(500).json({
+      message: 'Server error while marking messages as read.',
+      error: error.message,
+    });
+  }
+};
+
 exports.getSessionMessages = async (req, res) => {
   try {
     const sessionId = req.params.sessionId || req.params.id;
